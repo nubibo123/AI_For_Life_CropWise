@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -19,6 +20,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
@@ -29,11 +31,7 @@ export default function LoginScreen() {
 
     try {
       setLoading(true);
-      // TODO: Implement login logic
-      console.log('Logging in with:', email);
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      
+      await login(email.trim(), password);
       // Navigate to main app after successful login
       router.replace('/(tabs)');
     } catch (error) {
@@ -135,7 +133,7 @@ export default function LoginScreen() {
           {/* Sign Up Link */}
           <View style={styles.signUpContainer}>
             <Text style={styles.signUpText}>Chưa có tài khoản? </Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push('/register')}>
               <Text style={styles.signUpLink}>Đăng ký</Text>
             </TouchableOpacity>
           </View>
