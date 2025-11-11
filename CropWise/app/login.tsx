@@ -3,7 +3,6 @@ import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
 import {
-  Image,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
@@ -24,8 +23,7 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
-      // TODO: Show error message
-      console.log('Vui lòng nhập đầy đủ thông tin');
+      setErrorMessage('Vui lòng nhập đầy đủ email và mật khẩu.');
       return;
     }
 
@@ -34,9 +32,23 @@ export default function LoginScreen() {
       await login(email.trim(), password);
       // Navigate to main app after successful login
       router.replace('/(tabs)');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
-      // TODO: Show error message
+      const code: string | undefined = error?.code;
+      switch (code) {
+        case 'auth/invalid-email':
+          setErrorMessage('Email không hợp lệ.');
+          break;
+        case 'auth/user-not-found':
+        case 'auth/wrong-password':
+          setErrorMessage('Email hoặc mật khẩu không đúng.');
+          break;
+        case 'auth/too-many-requests':
+          setErrorMessage('Bạn đã thử quá nhiều lần. Vui lòng thử lại sau.');
+          break;
+        default:
+          setErrorMessage('Đăng nhập thất bại. Vui lòng thử lại.');
+      }
     } finally {
       setLoading(false);
     }
@@ -109,8 +121,17 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
 
+          {errorMessage ? (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>{errorMessage}</Text>
+            </View>
+          ) : null}
+
           {/* Forgot Password */}
-          <TouchableOpacity style={styles.forgotPassword}>
+          <TouchableOpacity
+            style={styles.forgotPassword}
+            onPress={() => router.push('/forgot-password')}
+          >
             <Text style={styles.forgotPasswordText}>Quên mật khẩu?</Text>
           </TouchableOpacity>
 
@@ -222,6 +243,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#fff',
+  },
+  errorContainer: {
+    backgroundColor: '#fdecea',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#f5c6cb',
+  },
+  errorText: {
+    color: '#c62828',
+    fontSize: 14,
   },
   signUpContainer: {
     flexDirection: 'row',

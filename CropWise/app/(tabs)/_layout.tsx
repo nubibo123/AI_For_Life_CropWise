@@ -42,7 +42,7 @@ export default function TabLayout() {
         options={{
           title: 'Cây trồng',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "leaf" : "leaf-outline"} size={24} color={color} />
+            <Ionicons name={focused ? 'leaf' : 'leaf-outline'} size={24} color={color} />
           ),
         }}
       />
