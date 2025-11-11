@@ -1,7 +1,24 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Tabs } from 'expo-router';
+import { Redirect, Tabs } from 'expo-router';
+import React from 'react';
+import { ActivityIndicator, View } from 'react-native';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function TabLayout() {
+  const { user, initializing } = useAuth();
+
+  if (initializing) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator size="large" color="#4CAF50" />
+      </View>
+    );
+  }
+
+  if (!user) {
+    return <Redirect href="/login" />;
+  }
+
   return (
     <Tabs
       screenOptions={{
@@ -31,7 +48,7 @@ export default function TabLayout() {
         options={{
           title: 'Cây trồng',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "leaf" : "leaf-outline"} size={24} color={color} />
+            <Ionicons name={focused ? 'leaf' : 'leaf-outline'} size={24} color={color} />
           ),
         }}
       />
