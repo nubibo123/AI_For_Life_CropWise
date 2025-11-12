@@ -1,5 +1,16 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { FirebaseApp, getApps, initializeApp } from 'firebase/app';
-import { Auth, getAuth, initializeAuth } from 'firebase/auth';
+import {
+  Auth,
+  getAuth,
+  initializeAuth,
+} from 'firebase/auth';
+import {
+  Firestore,
+  getFirestore,
+  initializeFirestore,
+  setLogLevel,
+} from 'firebase/firestore';
 import { Platform } from 'react-native';
 
 const firebaseConfig = {
@@ -13,10 +24,25 @@ const firebaseConfig = {
 };
 
 let app: FirebaseApp;
+let db: Firestore;
+
 if (!getApps().length) {
   app = initializeApp(firebaseConfig);
+  if (Platform.OS === 'web') {
+    db = getFirestore(app);
+  } else {
+    db = initializeFirestore(app, {
+      experimentalAutoDetectLongPolling: true,
+      //experimentalForceLongPolling: true,
+    });
+  }
 } else {
   app = getApps()[0]!;
+  db = getFirestore(app);
+}
+
+if (__DEV__) {
+  setLogLevel('debug');
 }
 
 let auth: Auth;
@@ -24,10 +50,18 @@ if (Platform.OS === 'web') {
   auth = getAuth(app);
 } else {
   try {
-    auth = initializeAuth(app);
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { getReactNativePersistence } = require('firebase/auth/react-native');
+    auth = initializeAuth(app, {
+      persistence: getReactNativePersistence(AsyncStorage),
+    });
   } catch {
-    auth = getAuth(app);
+    try {
+      auth = initializeAuth(app);
+    } catch {
+      auth = getAuth(app);
+    }
   }
 }
 
-export { app, auth };
+export { app, auth, db };

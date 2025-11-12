@@ -19,7 +19,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState('');
   const { login } = useAuth();
 
   const handleLogin = async () => {
@@ -30,7 +30,7 @@ export default function LoginScreen() {
 
     try {
       setLoading(true);
-      setErrorMessage(null);
+      setErrorMessage('');
       await login(email.trim(), password);
       // Navigate to main app after successful login
       router.replace('/(tabs)');

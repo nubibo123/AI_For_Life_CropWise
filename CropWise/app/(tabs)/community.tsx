@@ -14,8 +14,8 @@ import {
 import { PostCard } from '../../components/PostCard';
 import { Post } from '../../types/community';
 import {
-  getCommunityPosts,
   likePost,
+  subscribeToCommunityPosts,
 } from '../../services/communityService';
 import { getNotificationCount } from '../../services/notificationService';
 
@@ -27,8 +27,13 @@ export default function CommunityScreen() {
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
 
   useEffect(() => {
-    loadPosts();
+    setLoading(true);
+    const unsubscribe = subscribeToCommunityPosts((data) => {
+      setPosts(data);
+      setLoading(false);
+    });
     loadNotificationCount();
+    return unsubscribe;
   }, []);
 
   // Refresh notification count when screen is focused
@@ -44,18 +49,6 @@ export default function CommunityScreen() {
       setUnreadNotificationCount(count.unread);
     } catch (error) {
       console.error('Error loading notification count:', error);
-    }
-  };
-
-  const loadPosts = async () => {
-    try {
-      setLoading(true);
-      const data = await getCommunityPosts();
-      setPosts(data);
-    } catch (error) {
-      console.error('Error loading posts:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -174,15 +167,12 @@ export default function CommunityScreen() {
         </View>
         <View style={styles.filterChips}>
           <TouchableOpacity style={styles.filterChip}>
-            <Ionicons name="leaf" size={16} color="#4CAF50" />
             <Text style={styles.filterChipText}>Đậu gà & Đậu xanh</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.filterChip}>
-            <Ionicons name="leaf" size={16} color="#4CAF50" />
             <Text style={styles.filterChipText}>Đậu tương</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.filterChip}>
-            <Ionicons name="leaf" size={16} color="#4CAF50" />
             <Text style={styles.filterChipText}>Đậu</Text>
           </TouchableOpacity>
         </View>
@@ -319,7 +309,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
-    gap: 6,
   },
   filterChipText: {
     fontSize: 12,

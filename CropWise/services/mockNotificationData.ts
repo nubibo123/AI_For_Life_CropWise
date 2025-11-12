@@ -9,6 +9,8 @@ import { MOCK_POSTS } from './mockData';
 let MOCK_NOTIFICATIONS: Notification[] = [
   {
     id: 'notif1',
+    recipientId: 'user_owner_1',
+    actorId: 'user1',
     type: 'comment',
     title: 'Bình luận mới',
     message: 'Shashi đã bình luận vào bài đăng của bạn: "No problem is there"',
@@ -26,6 +28,8 @@ let MOCK_NOTIFICATIONS: Notification[] = [
   },
   {
     id: 'notif2',
+    recipientId: 'user_owner_1',
+    actorId: 'user2',
     type: 'like',
     title: 'Thích bài đăng',
     message: 'Bánh xèo đã thích bài đăng của bạn',
@@ -42,6 +46,8 @@ let MOCK_NOTIFICATIONS: Notification[] = [
   },
   {
     id: 'notif3',
+    recipientId: 'user_owner_2',
+    actorId: 'user4',
     type: 'comment',
     title: 'Bình luận mới',
     message: 'Trà sữa trân châu đã bình luận vào bài đăng của bạn: "Check the presence of any insects"',
@@ -61,6 +67,8 @@ let MOCK_NOTIFICATIONS: Notification[] = [
   },
   {
     id: 'notif4',
+    recipientId: 'user_owner_1',
+    actorId: 'user3',
     type: 'reply',
     title: 'Phản hồi bình luận',
     message: 'Tàu phớ đã phản hồi bình luận của bạn',

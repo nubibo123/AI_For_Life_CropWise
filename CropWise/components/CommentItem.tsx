@@ -18,6 +18,12 @@ interface CommentItemProps {
   postId: string;
   onLike?: (postId: string, commentId: string) => void;
   onDislike?: (postId: string, commentId: string) => void;
+  // New props for voting and best answer
+  onUpvote?: (postId: string, commentId: string) => void;
+  onDownvote?: (postId: string, commentId: string) => void;
+  canMarkBest?: boolean;
+  isBestAnswer?: boolean;
+  onMarkBest?: (postId: string, commentId: string) => void;
 }
 
 /**
@@ -50,6 +56,11 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   postId,
   onLike,
   onDislike,
+  onUpvote,
+  onDownvote,
+  canMarkBest,
+  isBestAnswer,
+  onMarkBest,
 }) => {
   const userLiked = (comment as any).userLiked || false;
   const userDisliked = (comment as any).userDisliked || false;
@@ -66,8 +77,23 @@ export const CommentItem: React.FC<CommentItemProps> = ({
     }
   };
 
+  const handleUpvote = () => {
+    if (onUpvote) onUpvote(postId, comment.id);
+  };
+
+  const handleDownvote = () => {
+    if (onDownvote) onDownvote(postId, comment.id);
+  };
+
+  const handleMarkBest = () => {
+    if (onMarkBest) onMarkBest(postId, comment.id);
+  };
+
   return (
-    <View style={styles.container}>
+    <View style={[
+      styles.container,
+      isBestAnswer ? styles.bestAnswerContainer : undefined,
+    ]}>
       {/* Thông tin người bình luận */}
       <View style={styles.userInfo}>
         <View style={styles.avatarContainer}>
@@ -117,44 +143,79 @@ export const CommentItem: React.FC<CommentItemProps> = ({
 
       {/* Nút tương tác */}
       <View style={styles.interactionRow}>
+        {/* Upvote */}
         <TouchableOpacity
           style={styles.interactionButton}
-          onPress={handleLike}
+          onPress={handleUpvote}
           activeOpacity={0.7}
         >
-          <Ionicons
-            name={userLiked ? 'thumbs-up' : 'thumbs-up-outline'}
-            size={18}
-            color={userLiked ? '#1976D2' : '#666'}
-          />
-          <Text
-            style={[
-              styles.interactionCount,
-              userLiked && styles.interactionCountActive,
-            ]}
-          >
-            {comment.likeCount ?? 0}
-          </Text>
+          <Ionicons name="arrow-up" size={18} color="#666" />
         </TouchableOpacity>
+        <Text style={styles.voteCountText}>{comment.voteCount ?? 0}</Text>
+        {/* Downvote */}
         <TouchableOpacity
-          style={styles.interactionButton}
-          onPress={handleDislike}
+          style={[styles.interactionButton, { marginLeft: 8 }]}
+          onPress={handleDownvote}
           activeOpacity={0.7}
         >
-          <Ionicons
-            name={userDisliked ? 'thumbs-down' : 'thumbs-down-outline'}
-            size={18}
-            color={userDisliked ? '#1976D2' : '#666'}
-          />
-          <Text
-            style={[
-              styles.interactionCount,
-              userDisliked && styles.interactionCountActive,
-            ]}
-          >
-            {comment.dislikeCount ?? 0}
-          </Text>
+          <Ionicons name="arrow-down" size={18} color="#666" />
         </TouchableOpacity>
+
+        {/* Legacy like/dislike (optional, kept) */}
+        <View style={{ flexDirection: 'row', marginLeft: 16 }}>
+          <TouchableOpacity
+            style={styles.interactionButton}
+            onPress={handleLike}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name={userLiked ? 'thumbs-up' : 'thumbs-up-outline'}
+              size={18}
+              color={userLiked ? '#1976D2' : '#666'}
+            />
+            <Text
+              style={[
+                styles.interactionCount,
+                userLiked && styles.interactionCountActive,
+              ]}
+            >
+              {comment.likeCount ?? 0}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.interactionButton}
+            onPress={handleDislike}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name={userDisliked ? 'thumbs-down' : 'thumbs-down-outline'}
+              size={18}
+              color={userDisliked ? '#1976D2' : '#666'}
+            />
+            <Text
+              style={[
+                styles.interactionCount,
+                userDisliked && styles.interactionCountActive,
+              ]}
+            >
+              {comment.dislikeCount ?? 0}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Mark as best */}
+        {canMarkBest && !isBestAnswer && (
+          <TouchableOpacity style={styles.bestButton} onPress={handleMarkBest}>
+            <Ionicons name="checkmark-circle-outline" size={18} color="#2e7d32" />
+            <Text style={styles.bestButtonText}>Đánh dấu là hay nhất</Text>
+          </TouchableOpacity>
+        )}
+        {isBestAnswer && (
+          <View style={styles.bestBadge}>
+            <Ionicons name="checkmark-circle" size={16} color="#2e7d32" />
+            <Text style={styles.bestBadgeText}>Hay nhất</Text>
+          </View>
+        )}
       </View>
     </View>
   );
@@ -166,6 +227,11 @@ const styles = StyleSheet.create({
     padding: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#F5F5F5',
+  },
+  bestAnswerContainer: {
+    borderWidth: 1,
+    borderColor: '#72C472',
+    borderRadius: 8,
   },
   userInfo: {
     flexDirection: 'row',
@@ -238,6 +304,7 @@ const styles = StyleSheet.create({
   interactionRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
   },
   interactionButton: {
     flexDirection: 'row',
@@ -251,6 +318,43 @@ const styles = StyleSheet.create({
   },
   interactionCountActive: {
     color: '#1976D2',
+    fontWeight: '600',
+  },
+  voteCountText: {
+    fontSize: 14,
+    color: '#333',
+    fontWeight: '600',
+    minWidth: 24,
+    textAlign: 'center',
+  },
+  bestButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 'auto',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+    backgroundColor: '#E8F5E9',
+  },
+  bestButtonText: {
+    color: '#2e7d32',
+    fontSize: 13,
+    fontWeight: '600',
+    marginLeft: 6,
+  },
+  bestBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 'auto',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: '#E8F5E9',
+    borderRadius: 6,
+  },
+  bestBadgeText: {
+    color: '#2e7d32',
+    fontSize: 12,
+    marginLeft: 4,
     fontWeight: '600',
   },
 });
