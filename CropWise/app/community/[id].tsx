@@ -17,11 +17,13 @@ import {
 import { CommentItem } from '../../components/CommentItem';
 import { Comment, Post } from '../../types/community';
 import {
-  createComment,
-  getPostById,
-  likeComment,
+  createCommentRealtime,
   likePost,
+  subscribeToPost,
+  voteComment,
+  markBestAnswer,
 } from '../../services/communityService';
+import { useAuth } from '../../contexts/AuthContext';
 
 /**
  * Format thời gian đăng bài
@@ -51,27 +53,20 @@ const formatTimeAgo = (dateString: string | undefined): string => {
 export default function PostDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { user } = useAuth();
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [replyText, setReplyText] = useState('');
 
   useEffect(() => {
-    if (id) {
-      loadPost();
-    }
-  }, [id]);
-
-  const loadPost = async () => {
-    try {
-      setLoading(true);
-      const data = await getPostById(id!);
-      setPost(data);
-    } catch (error) {
-      console.error('Error loading post:', error);
-    } finally {
+    if (!id) return;
+    setLoading(true);
+    const unsub = subscribeToPost(id, (p) => {
+      setPost(p);
       setLoading(false);
-    }
-  };
+    });
+    return unsub;
+  }, [id]);
 
   const handleSendReply = async () => {
     if (!replyText.trim() || !post) {
@@ -79,21 +74,11 @@ export default function PostDetailScreen() {
     }
 
     try {
-      const newComment = await createComment({
+      await createCommentRealtime({
         postId: post.id,
         content: replyText.trim(),
       });
-
-      if (newComment && post) {
-        // Cập nhật post với comment mới
-        const updatedPost = {
-          ...post,
-          comments: [...post.comments, newComment],
-          commentCount: post.commentCount + 1,
-        };
-        setPost(updatedPost);
-        setReplyText('');
-      }
+      setReplyText('');
     } catch (error) {
       console.error('Error creating comment:', error);
     }
@@ -103,61 +88,48 @@ export default function PostDetailScreen() {
     if (!post) return;
 
     try {
-      const updatedPost = await likePost({
+      await likePost({
         postId: post.id,
         action,
       });
-
-      if (updatedPost) {
-        setPost(updatedPost);
-      }
     } catch (error) {
       console.error('Error liking post:', error);
     }
   };
 
-  const handleLikeComment = async (
-    commentId: string,
-    action: 'like' | 'dislike' | 'remove'
-  ) => {
+  const handleVoteComment = async (commentId: string, value: 1 | -1 | 0) => {
     if (!post) return;
-
     try {
-      const updatedComment = await likeComment({
-        postId: post.id,
-        commentId,
-        action,
-      });
-
-      if (updatedComment && post) {
-        // Cập nhật comment trong post
-        const updatedComments = post.comments.map((c) =>
-          c.id === commentId ? updatedComment : c
-        );
-        setPost({
-          ...post,
-          comments: updatedComments,
-        });
-      }
-    } catch (error) {
-      console.error('Error liking comment:', error);
+      await voteComment(post.id, commentId, value);
+    } catch (e) {
+      console.error('Error voting comment', e);
     }
   };
 
-  const renderComment = ({ item }: { item: Comment }) => (
-    <CommentItem
-      comment={item}
-      postId={post?.id || ''}
-      onLike={(postId, commentId) => {
-        const currentAction = (item as any).userLiked ? 'remove' : 'like';
-        handleLikeComment(commentId, currentAction);
-      }}
-      onDislike={(postId, commentId) => {
-        const currentAction = (item as any).userDisliked ? 'remove' : 'dislike';
-        handleLikeComment(commentId, currentAction);
-      }}
-    />
-  );
+  const handleMarkBest = async (commentId: string) => {
+    if (!post) return;
+    try {
+      await markBestAnswer(post.id, commentId);
+    } catch (e) {
+      console.error('Error marking best answer', e);
+    }
+  };
+
+  const renderComment = ({ item }: { item: Comment }) => {
+    const isBest = post?.bestAnswerId === item.id;
+    const canMark = !!user && user.id === post?.authorId;
+    return (
+      <CommentItem
+        comment={item}
+        postId={post?.id || ''}
+        onUpvote={() => handleVoteComment(item.id, 1)}
+        onDownvote={() => handleVoteComment(item.id, -1)}
+        canMarkBest={canMark}
+        isBestAnswer={isBest}
+        onMarkBest={() => handleMarkBest(item.id)}
+      />
+    );
+  };
 
   const renderEmptyComments = () => (
     <View style={styles.emptyComments}>
@@ -191,6 +163,8 @@ export default function PostDetailScreen() {
     );
   }
 
+  const comments = post.comments || [];
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -218,7 +192,7 @@ export default function PostDetailScreen() {
       )}
 
       <FlatList
-        data={post.comments}
+        data={comments}
         renderItem={renderComment}
         keyExtractor={(item) => item.id}
         ListHeaderComponent={

@@ -1,117 +1,155 @@
 /**
- * Service để lấy dữ liệu thông báo
- * Sử dụng mock data, sẵn sàng thay thế bằng API thật
+ * Service thông báo sử dụng Firebase Firestore
  */
 
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocs,
+  orderBy,
+  query,
+  serverTimestamp,
+  updateDoc,
+  where,
+} from 'firebase/firestore';
+import { auth, db } from './firebase';
 import {
   Notification,
   NotificationCount,
+  NotificationType,
 } from '../types/notification';
-import {
-  MOCK_NOTIFICATIONS,
-  addNotification,
-  deleteNotification,
-  getUnreadNotificationCount,
-  markAllNotificationsAsRead,
-  markNotificationAsRead,
-} from './mockNotificationData';
 
-/**
- * Giả lập độ trễ mạng
- */
-const simulateNetworkDelay = (ms: number = 500): Promise<void> => {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+const mapNotification = (id: string, data: any): Notification => ({
+  id,
+  recipientId: data.recipientId,
+  actorId: data.actorId ?? undefined,
+  type: data.type as NotificationType,
+  title: data.title ?? '',
+  message: data.message ?? '',
+  user: data.user ?? undefined,
+  post: data.post ?? undefined,
+  postId: data.postId ?? undefined,
+  commentId: data.commentId ?? undefined,
+  createdAt: data.createdAt?.toDate?.().toISOString?.() ?? new Date().toISOString(),
+  isRead: data.isRead ?? false,
+  imageUrl: data.imageUrl ?? undefined,
+});
+
+const getCurrentUserId = (): string | null => {
+  const currentUser = auth.currentUser;
+  return currentUser ? currentUser.uid : null;
 };
 
-/**
- * Lấy danh sách tất cả thông báo
- * @param includeRead Bao gồm thông báo đã đọc (mặc định: true)
- * @returns Promise<Notification[]> Danh sách thông báo
- */
 export const getNotifications = async (includeRead: boolean = true): Promise<Notification[]> => {
-  await simulateNetworkDelay(300);
-  let notifications = JSON.parse(JSON.stringify(MOCK_NOTIFICATIONS));
-  
+  const userId = getCurrentUserId();
+  if (!userId) return [];
+
+  let notificationsQuery = query(
+    collection(db, 'notifications'),
+    where('recipientId', '==', userId),
+    orderBy('createdAt', 'desc')
+  );
+
   if (!includeRead) {
-    notifications = notifications.filter((n: Notification) => !n.isRead);
+    notificationsQuery = query(
+      collection(db, 'notifications'),
+      where('recipientId', '==', userId),
+      where('isRead', '==', false),
+      orderBy('createdAt', 'desc')
+    );
   }
-  
-  return notifications;
+
+  const snapshot = await getDocs(notificationsQuery);
+  return snapshot.docs.map((docSnap) => mapNotification(docSnap.id, docSnap.data()));
 };
 
-/**
- * Lấy số lượng thông báo chưa đọc
- * @returns Promise<NotificationCount> Số lượng thông báo
- */
 export const getNotificationCount = async (): Promise<NotificationCount> => {
-  await simulateNetworkDelay(200);
-  const unreadCount = getUnreadNotificationCount();
-  const totalCount = MOCK_NOTIFICATIONS.length;
-  
+  const userId = getCurrentUserId();
+  if (!userId) {
+    return { total: 0, unread: 0 };
+  }
+
+  const totalSnapshot = await getDocs(
+    query(collection(db, 'notifications'), where('recipientId', '==', userId))
+  );
+
+  const unreadSnapshot = await getDocs(
+    query(
+      collection(db, 'notifications'),
+      where('recipientId', '==', userId),
+      where('isRead', '==', false)
+    )
+  );
+
   return {
-    total: totalCount,
-    unread: unreadCount,
+    total: totalSnapshot.size,
+    unread: unreadSnapshot.size,
   };
 };
 
-/**
- * Đánh dấu thông báo là đã đọc
- * @param notificationId ID của thông báo
- * @returns Promise<Notification | null> Thông báo đã cập nhật hoặc null nếu không tìm thấy
- */
 export const markAsRead = async (notificationId: string): Promise<Notification | null> => {
-  await simulateNetworkDelay(200);
-  try {
-    const updatedNotification = markNotificationAsRead(notificationId);
-    return updatedNotification ? JSON.parse(JSON.stringify(updatedNotification)) : null;
-  } catch (error) {
-    console.error('Error marking notification as read:', error);
-    return null;
-  }
+  const userId = getCurrentUserId();
+  if (!userId) return null;
+
+  const notificationRef = doc(db, 'notifications', notificationId);
+  await updateDoc(notificationRef, { isRead: true });
+  const docSnap = await getDoc(notificationRef);
+  return docSnap ? mapNotification(docSnap.id, docSnap.data()) : null;
 };
 
-/**
- * Đánh dấu tất cả thông báo là đã đọc
- * @returns Promise<boolean> Thành công hay không
- */
 export const markAllAsRead = async (): Promise<boolean> => {
-  await simulateNetworkDelay(300);
-  try {
-    markAllNotificationsAsRead();
-    return true;
-  } catch (error) {
-    console.error('Error marking all notifications as read:', error);
-    return false;
-  }
+  const userId = getCurrentUserId();
+  if (!userId) return false;
+
+  const unreadSnapshot = await getDocs(
+    query(
+      collection(db, 'notifications'),
+      where('recipientId', '==', userId),
+      where('isRead', '==', false)
+    )
+  );
+
+  const promises = unreadSnapshot.docs.map((docSnap) =>
+    updateDoc(doc(db, 'notifications', docSnap.id), { isRead: true })
+  );
+
+  await Promise.all(promises);
+  return true;
 };
 
-/**
- * Xóa thông báo
- * @param notificationId ID của thông báo
- * @returns Promise<boolean> Thành công hay không
- */
 export const deleteNotificationById = async (notificationId: string): Promise<boolean> => {
-  await simulateNetworkDelay(200);
-  try {
-    return deleteNotification(notificationId);
-  } catch (error) {
-    console.error('Error deleting notification:', error);
-    return false;
-  }
+  const userId = getCurrentUserId();
+  if (!userId) return false;
+
+  await deleteDoc(doc(db, 'notifications', notificationId));
+  return true;
 };
 
-/**
- * Tạo thông báo mới (thường được gọi từ backend khi có sự kiện)
- * @param notification Dữ liệu thông báo
- * @returns Promise<Notification | null> Thông báo mới tạo hoặc null nếu lỗi
- */
+export interface CreateNotificationInput {
+  recipientId: string;
+  actorId?: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  postId?: string;
+  commentId?: string;
+  imageUrl?: string;
+}
+
 export const createNotification = async (
-  notification: Omit<Notification, 'id' | 'createdAt' | 'isRead'>
+  notification: CreateNotificationInput
 ): Promise<Notification | null> => {
-  await simulateNetworkDelay(300);
   try {
-    const newNotification = addNotification(notification);
-    return JSON.parse(JSON.stringify(newNotification));
+    const ref = await addDoc(collection(db, 'notifications'), {
+      ...notification,
+      isRead: false,
+      createdAt: serverTimestamp(),
+    });
+    const docSnap = await getDoc(ref);
+    return docSnap ? mapNotification(docSnap.id, docSnap.data()) : null;
   } catch (error) {
     console.error('Error creating notification:', error);
     return null;

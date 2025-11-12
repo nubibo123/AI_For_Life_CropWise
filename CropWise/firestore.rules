@@ -1,0 +1,140 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Posts collection
+    match /posts/{postId} {
+      allow read: if true;
+
+      // Create post: must be authenticated and authorId matches uid
+      allow create: if request.auth != null
+                    && request.resource.data.authorId == request.auth.uid
+                    && request.resource.data.createdAt != null
+                    && request.resource.data.likeCount == 0
+                    && request.resource.data.dislikeCount == 0
+                    && request.resource.data.voteCount == 0
+                    && request.resource.data.commentCount == 0;
+
+      // Update post: author có thể chỉnh nội dung, mọi user có thể vote/comment count
+      allow update: if request.auth != null && (
+        (
+          resource.data.authorId == request.auth.uid &&
+          request.resource.data.diff(resource.data).changedKeys()
+            .hasOnly(['title', 'content', 'description', 'imageUrl', 'imageUrls', 'cropType', 'tags', 'bestAnswerId'])
+        ) ||
+        (
+          request.resource.data.diff(resource.data).changedKeys()
+            .hasOnly(['likeCount', 'dislikeCount', 'voteCount', 'commentCount']) &&
+          (
+            request.resource.data.likeCount == resource.data.likeCount + 1 ||
+            request.resource.data.likeCount == resource.data.likeCount - 1 ||
+            request.resource.data.likeCount == resource.data.likeCount
+          ) &&
+          (
+            request.resource.data.dislikeCount == resource.data.dislikeCount + 1 ||
+            request.resource.data.dislikeCount == resource.data.dislikeCount - 1 ||
+            request.resource.data.dislikeCount == resource.data.dislikeCount
+          ) &&
+          (
+            request.resource.data.voteCount == resource.data.voteCount + 1 ||
+            request.resource.data.voteCount == resource.data.voteCount - 1 ||
+            request.resource.data.voteCount == resource.data.voteCount
+          ) &&
+          (
+            request.resource.data.commentCount == resource.data.commentCount + 1 ||
+            request.resource.data.commentCount == resource.data.commentCount - 1 ||
+            request.resource.data.commentCount == resource.data.commentCount
+          )
+        )
+      );
+
+      // Delete post: only author
+      allow delete: if request.auth != null && resource.data.authorId == request.auth.uid;
+
+      // Votes subcollection cho post
+      match /votes/{userId} {
+        allow read, write: if request.auth != null
+                           && request.auth.uid == userId
+                           && request.resource.data.keys().hasOnly(['value'])
+                           && (request.resource.data.value in [-1, 0, 1]);
+      }
+
+      // Comments subcollection
+      match /comments/{commentId} {
+        allow read: if true;
+
+        // Create comment: must be authenticated and authorId matches
+        allow create: if request.auth != null
+                      && request.resource.data.authorId == request.auth.uid
+                      && request.resource.data.createdAt != null
+                      && request.resource.data.voteCount == 0
+                      && request.resource.data.likeCount == 0
+                      && request.resource.data.dislikeCount == 0;
+
+        // Update comment:
+        // - Author can edit own content
+        // - Any authenticated user can update voteCount by -1/0/+1 only (atomic)
+        allow update: if (
+          // Author edits own content (content or imageUrl)
+          (request.auth != null
+           && resource.data.authorId == request.auth.uid
+           && request.resource.data.diff(resource.data).changedKeys()
+             .hasOnly(['content', 'imageUrl']))
+        ) || (
+          // Vote change: only voteCount may change by -1/0/+1
+          (request.auth != null
+           && request.resource.data.diff(resource.data).changedKeys().hasOnly(['voteCount'])
+           && (request.resource.data.voteCount == resource.data.voteCount + 1
+               || request.resource.data.voteCount == resource.data.voteCount - 1
+               || request.resource.data.voteCount == resource.data.voteCount))
+        );
+
+        // Delete comment: author of comment or author of post
+        allow delete: if request.auth != null
+                      && (resource.data.authorId == request.auth.uid
+                          || get(/databases/$(database)/documents/posts/$(postId)).data.authorId == request.auth.uid);
+
+        // Per-user votes tracking (optional, used by client)
+        match /votes/{userId} {
+          allow read: if request.auth != null && request.auth.uid == userId;
+          allow write: if request.auth != null && request.auth.uid == userId
+                       && request.resource.data.keys().hasOnly(['value'])
+                       && (request.resource.data.value in [-1, 0, 1]);
+        }
+      }
+    }
+
+    // Notifications collection
+    match /notifications/{notificationId} {
+      allow read: if request.auth != null
+                  && resource.data.recipientId == request.auth.uid;
+
+      // Actor (người thực hiện hành động) được phép tạo thông báo cho người khác
+      allow create: if request.auth != null
+                    && request.resource.data.actorId == request.auth.uid
+                    && request.resource.data.recipientId is string
+                    && request.resource.data.keys().hasOnly([
+                      'recipientId',
+                      'actorId',
+                      'type',
+                      'title',
+                      'message',
+                      'postId',
+                      'commentId',
+                      'imageUrl',
+                      'isRead',
+                      'createdAt'
+                    ])
+                    && request.resource.data.isRead == false;
+
+      // Người nhận được phép đánh dấu đọc / xóa
+      allow update: if request.auth != null
+                    && resource.data.recipientId == request.auth.uid
+                    && request.resource.data.diff(resource.data).changedKeys().hasOnly(['isRead'])
+                    && request.resource.data.isRead == true;
+
+      allow delete: if request.auth != null
+                    && resource.data.recipientId == request.auth.uid;
+    }
+  }
+}
+
