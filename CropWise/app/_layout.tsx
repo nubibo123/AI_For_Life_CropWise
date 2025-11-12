@@ -10,7 +10,6 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="login" />
           <Stack.Screen name="register" />
-          <Stack.Screen name="forgot-password" />
           <Stack.Screen name="community/[id]" />
           <Stack.Screen name="community/create" />
           <Stack.Screen name="notifications" />

@@ -1,26 +1,11 @@
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
-import {
-  User,
-  createUserWithEmailAndPassword,
-  onAuthStateChanged,
-  sendPasswordResetEmail,
-  signInWithEmailAndPassword,
-  signOut,
-  updateProfile,
-} from 'firebase/auth';
-import { auth } from '../services/firebase';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import * as SecureStore from 'expo-secure-store';
+import { login as loginApi, register as registerApi, getProfileFromToken } from '../services/authService';
 
 type AuthUser = {
   id: string;
-  email: string | null;
-  name: string | null;
+  name: string;
+  email: string;
 };
 
 type AuthContextValue = {
@@ -30,84 +15,69 @@ type AuthContextValue = {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  refreshToken: () => Promise<string | null>;
-  resetPassword: (email: string) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-const normalizeUser = (firebaseUser: User | null): AuthUser | null => {
-  if (!firebaseUser) return null;
-  return {
-    id: firebaseUser.uid,
-    email: firebaseUser.email,
-    name: firebaseUser.displayName,
-  };
-};
+const TOKEN_KEY = 'auth_token';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [initializing, setInitializing] = useState(true);
+  const [initializing, setInitializing] = useState<boolean>(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setUser(normalizeUser(firebaseUser));
-      setInitializing(false);
-    });
-
-    return unsubscribe;
+    const bootstrap = async () => {
+      try {
+        const storedToken = await SecureStore.getItemAsync(TOKEN_KEY);
+        if (storedToken) {
+          setToken(storedToken);
+          const profile = await getProfileFromToken(storedToken);
+          setUser(profile);
+        }
+      } catch (e) {
+        // ignore bootstrap errors, treat as logged out
+      } finally {
+        setInitializing(false);
+      }
+    };
+    bootstrap();
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    await signInWithEmailAndPassword(auth, email, password);
-    setUser(normalizeUser(auth.currentUser));
+    const res = await loginApi({ email, password });
+    setToken(res.token);
+    await SecureStore.setItemAsync(TOKEN_KEY, res.token);
+    setUser(res.user);
   }, []);
 
   const register = useCallback(async (name: string, email: string, password: string) => {
-    const credential = await createUserWithEmailAndPassword(auth, email, password);
-    if (credential.user && name) {
-      await updateProfile(credential.user, { displayName: name });
-    }
-    setUser(normalizeUser(auth.currentUser));
+    const res = await registerApi({ name, email, password });
+    setToken(res.token);
+    await SecureStore.setItemAsync(TOKEN_KEY, res.token);
+    setUser(res.user);
   }, []);
 
   const logout = useCallback(async () => {
-    await signOut(auth);
     setUser(null);
+    setToken(null);
+    await SecureStore.deleteItemAsync(TOKEN_KEY);
   }, []);
 
-  const refreshToken = useCallback(async () => {
-    const currentUser = auth.currentUser;
-    if (!currentUser) return null;
-    return currentUser.getIdToken(true);
-  }, []);
-
-  const resetPassword = useCallback(async (email: string) => {
-    await sendPasswordResetEmail(auth, email);
-  }, []);
-
-  const value = useMemo<AuthContextValue>(
-    () => ({
-      user,
-      token: null,
-      initializing,
-      login,
-      register,
-      logout,
-      refreshToken,
-      resetPassword,
-    }),
-    [user, initializing, login, register, logout, refreshToken, resetPassword]
+  const value = useMemo(
+    () => ({ user, token, initializing, login, register, logout }),
+    [user, token, initializing, login, register, logout]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = (): AuthContextValue => {
-  const context = useContext(AuthContext);
-  if (!context) {
+  const ctx = useContext(AuthContext);
+  if (!ctx) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
-  return context;
+  return ctx;
 };
+
 

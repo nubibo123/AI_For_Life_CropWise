@@ -22,40 +22,22 @@ export default function RegisterScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleRegister = async () => {
     if (!name.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
-      setErrorMessage('Vui lòng điền đầy đủ thông tin.');
+      console.log('Vui lòng nhập đầy đủ thông tin');
       return;
     }
-
     if (password !== confirmPassword) {
-      setErrorMessage('Mật khẩu xác nhận không khớp.');
+      console.log('Mật khẩu không khớp');
       return;
     }
-
     try {
       setLoading(true);
-      setErrorMessage(null);
       await register(name.trim(), email.trim(), password);
       router.replace('/(tabs)');
-    } catch (error: any) {
-      console.error('Register error:', error);
-      const code: string | undefined = error?.code;
-      switch (code) {
-        case 'auth/email-already-in-use':
-          setErrorMessage('Email này đã được sử dụng.');
-          break;
-        case 'auth/invalid-email':
-          setErrorMessage('Email không hợp lệ.');
-          break;
-        case 'auth/weak-password':
-          setErrorMessage('Mật khẩu cần ít nhất 6 ký tự.');
-          break;
-        default:
-          setErrorMessage('Đăng ký thất bại. Vui lòng thử lại.');
-      }
+    } catch (e) {
+      console.error('Register error:', e);
     } finally {
       setLoading(false);
     }
@@ -69,10 +51,10 @@ export default function RegisterScreen() {
       <StatusBar style="dark" />
       <View style={styles.content}>
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
             <Ionicons name="chevron-back" size={26} color="#333" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Tạo tài khoản</Text>
+          <Text style={styles.headerTitle}>Đăng ký</Text>
           <View style={{ width: 26 }} />
         </View>
 
@@ -121,7 +103,7 @@ export default function RegisterScreen() {
           </View>
 
           <View style={styles.inputContainer}>
-            <Ionicons name="checkmark-done-outline" size={20} color="#999" style={styles.inputIcon} />
+            <Ionicons name="lock-closed-outline" size={20} color="#999" style={styles.inputIcon} />
             <TextInput
               style={styles.input}
               placeholder="Xác nhận mật khẩu"
@@ -134,30 +116,18 @@ export default function RegisterScreen() {
             />
           </View>
 
-          {errorMessage ? (
-            <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>{errorMessage}</Text>
-            </View>
-          ) : null}
-
           <TouchableOpacity
             style={[
               styles.registerButton,
-              (!name.trim() ||
-                !email.trim() ||
-                !password.trim() ||
-                !confirmPassword.trim() ||
-                loading) &&
+              (!name.trim() || !email.trim() || !password.trim() || !confirmPassword.trim() || loading) &&
                 styles.registerButtonDisabled,
             ]}
             onPress={handleRegister}
-            disabled={
-              !name.trim() || !email.trim() || !password.trim() || !confirmPassword.trim() || loading
-            }
+            disabled={!name.trim() || !email.trim() || !password.trim() || !confirmPassword.trim() || loading}
             activeOpacity={0.7}
           >
             <Text style={styles.registerButtonText}>
-              {loading ? 'Đang tạo tài khoản...' : 'Đăng ký'}
+              {loading ? 'Đang tạo tài khoản...' : 'Tạo tài khoản'}
             </Text>
           </TouchableOpacity>
 
@@ -244,18 +214,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#fff',
   },
-  errorContainer: {
-    backgroundColor: '#fdecea',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#f5c6cb',
-  },
-  errorText: {
-    color: '#c62828',
-    fontSize: 14,
-  },
   signInContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -271,3 +229,5 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
+
+
