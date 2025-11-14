@@ -15,6 +15,7 @@ type AuthContextValue = {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -64,9 +65,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await SecureStore.deleteItemAsync(TOKEN_KEY);
   }, []);
 
+  const resetPassword = useCallback(async (email: string) => {
+    // TODO: Implement actual password reset API call
+    // For now, we'll just simulate a successful request
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    console.log('Password reset email sent to:', email);
+  }, []);
+
   const value = useMemo(
-    () => ({ user, token, initializing, login, register, logout }),
-    [user, token, initializing, login, register, logout]
+    () => ({ user, token, initializing, login, register, logout, resetPassword }),
+    [user, token, initializing, login, register, logout, resetPassword]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

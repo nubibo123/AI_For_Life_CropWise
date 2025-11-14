@@ -13,6 +13,8 @@ export default function RootLayout() {
           <Stack.Screen name="community/[id]" />
           <Stack.Screen name="community/create" />
           <Stack.Screen name="notifications" />
+          <Stack.Screen name="diseases/index" />
+          <Stack.Screen name="diseases/[id]" />
         </Stack>
       </AuthProvider>
     </GestureHandlerRootView>

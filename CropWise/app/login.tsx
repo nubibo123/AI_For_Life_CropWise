@@ -20,7 +20,7 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
-
+const [errorMessage, setErrorMessage] = useState('');
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
       setErrorMessage('Vui lòng nhập đầy đủ email và mật khẩu.');
