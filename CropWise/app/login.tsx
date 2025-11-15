@@ -3,13 +3,13 @@ import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
 import {
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    KeyboardAvoidingView,
+    Platform,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -20,7 +20,7 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
-const [errorMessage, setErrorMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
       setErrorMessage('Vui lòng nhập đầy đủ email và mật khẩu.');
@@ -41,10 +41,14 @@ const [errorMessage, setErrorMessage] = useState('');
           break;
         case 'auth/user-not-found':
         case 'auth/wrong-password':
+        case 'auth/invalid-credential':
           setErrorMessage('Email hoặc mật khẩu không đúng.');
           break;
         case 'auth/too-many-requests':
           setErrorMessage('Bạn đã thử quá nhiều lần. Vui lòng thử lại sau.');
+          break;
+        case 'auth/user-disabled':
+          setErrorMessage('Tài khoản này đã bị vô hiệu hóa.');
           break;
         default:
           setErrorMessage('Đăng nhập thất bại. Vui lòng thử lại.');
@@ -84,7 +88,10 @@ const [errorMessage, setErrorMessage] = useState('');
               placeholder="Email hoặc Tên đăng nhập"
               placeholderTextColor="#999"
               value={email}
-              onChangeText={setEmail}
+              onChangeText={(text) => {
+                setEmail(text);
+                if (errorMessage) setErrorMessage('');
+              }}
               autoCapitalize="none"
               keyboardType="email-address"
               autoComplete="email"
@@ -104,7 +111,10 @@ const [errorMessage, setErrorMessage] = useState('');
               placeholder="Mật khẩu"
               placeholderTextColor="#999"
               value={password}
-              onChangeText={setPassword}
+              onChangeText={(text) => {
+                setPassword(text);
+                if (errorMessage) setErrorMessage('');
+              }}
               secureTextEntry={!showPassword}
               autoCapitalize="none"
               autoComplete="password"

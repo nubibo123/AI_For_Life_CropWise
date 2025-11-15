@@ -15,29 +15,64 @@ import { useAuth } from '../contexts/AuthContext';
 
 export default function RegisterScreen() {
   const router = useRouter();
-  const { register } = useAuth();
+  const { register, logout } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   const handleRegister = async () => {
     if (!name.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
-      console.log('Vui lòng nhập đầy đủ thông tin');
+      setErrorMessage('Vui lòng nhập đầy đủ thông tin.');
       return;
     }
     if (password !== confirmPassword) {
-      console.log('Mật khẩu không khớp');
+      setErrorMessage('Mật khẩu không khớp.');
+      return;
+    }
+    if (password.length < 6) {
+      setErrorMessage('Mật khẩu phải có ít nhất 6 ký tự.');
       return;
     }
     try {
       setLoading(true);
+      setErrorMessage('');
+      setSuccessMessage('');
       await register(name.trim(), email.trim(), password);
-      router.replace('/(tabs)');
-    } catch (e) {
-      console.error('Register error:', e);
+      
+      // Đăng xuất sau khi đăng ký thành công để user phải đăng nhập lại
+      await logout();
+      
+      // Hiển thị thông báo thành công và chuyển về trang đăng nhập
+      setSuccessMessage('Đăng ký thành công! Vui lòng đăng nhập với tài khoản vừa tạo.');
+      
+      // Chuyển về trang đăng nhập sau 1.5 giây
+      setTimeout(() => {
+        router.replace('/login');
+      }, 1500);
+    } catch (error: any) {
+      console.error('Register error:', error);
+      const code: string | undefined = error?.code;
+      switch (code) {
+        case 'auth/email-already-in-use':
+          setErrorMessage('Email này đã được sử dụng. Vui lòng sử dụng email khác.');
+          break;
+        case 'auth/invalid-email':
+          setErrorMessage('Email không hợp lệ.');
+          break;
+        case 'auth/weak-password':
+          setErrorMessage('Mật khẩu quá yếu. Vui lòng sử dụng mật khẩu mạnh hơn.');
+          break;
+        case 'auth/operation-not-allowed':
+          setErrorMessage('Phương thức đăng ký này không được phép.');
+          break;
+        default:
+          setErrorMessage('Đăng ký thất bại. Vui lòng thử lại.');
+      }
     } finally {
       setLoading(false);
     }
@@ -66,7 +101,10 @@ export default function RegisterScreen() {
               placeholder="Họ và tên"
               placeholderTextColor="#999"
               value={name}
-              onChangeText={setName}
+              onChangeText={(text) => {
+                setName(text);
+                if (errorMessage) setErrorMessage('');
+              }}
               autoCapitalize="words"
             />
           </View>
@@ -78,7 +116,10 @@ export default function RegisterScreen() {
               placeholder="Email"
               placeholderTextColor="#999"
               value={email}
-              onChangeText={setEmail}
+              onChangeText={(text) => {
+                setEmail(text);
+                if (errorMessage) setErrorMessage('');
+              }}
               autoCapitalize="none"
               keyboardType="email-address"
               autoComplete="email"
@@ -92,7 +133,10 @@ export default function RegisterScreen() {
               placeholder="Mật khẩu"
               placeholderTextColor="#999"
               value={password}
-              onChangeText={setPassword}
+              onChangeText={(text) => {
+                setPassword(text);
+                if (errorMessage) setErrorMessage('');
+              }}
               secureTextEntry={!showPassword}
               autoCapitalize="none"
               autoComplete="password-new"
@@ -109,12 +153,27 @@ export default function RegisterScreen() {
               placeholder="Xác nhận mật khẩu"
               placeholderTextColor="#999"
               value={confirmPassword}
-              onChangeText={setConfirmPassword}
+              onChangeText={(text) => {
+                setConfirmPassword(text);
+                if (errorMessage) setErrorMessage('');
+              }}
               secureTextEntry={!showPassword}
               autoCapitalize="none"
               autoComplete="password-new"
             />
           </View>
+
+          {errorMessage ? (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>{errorMessage}</Text>
+            </View>
+          ) : null}
+
+          {successMessage ? (
+            <View style={styles.successContainer}>
+              <Text style={styles.successText}>{successMessage}</Text>
+            </View>
+          ) : null}
 
           <TouchableOpacity
             style={[
@@ -227,6 +286,30 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#1976D2',
     fontWeight: '600',
+  },
+  errorContainer: {
+    backgroundColor: '#fdecea',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#f5c6cb',
+  },
+  errorText: {
+    color: '#c62828',
+    fontSize: 14,
+  },
+  successContainer: {
+    backgroundColor: '#e6f4ea',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#a5d6a7',
+  },
+  successText: {
+    color: '#2e7d32',
+    fontSize: 14,
   },
 });
 
