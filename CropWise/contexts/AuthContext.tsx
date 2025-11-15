@@ -1,6 +1,12 @@
+import { User as FirebaseUser, onAuthStateChanged, signOut } from 'firebase/auth';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import * as SecureStore from 'expo-secure-store';
-import { login as loginApi, register as registerApi, getProfileFromToken } from '../services/authService';
+import {
+    getUserFromFirebaseUser,
+    login as loginApi,
+    register as registerApi,
+    resetPassword as resetPasswordApi
+} from '../services/authService';
+import { auth } from '../services/firebase';
 
 type AuthUser = {
   id: string;
@@ -20,56 +26,62 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-const TOKEN_KEY = 'auth_token';
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [initializing, setInitializing] = useState<boolean>(true);
 
+  // Lắng nghe thay đổi trạng thái xác thực của Firebase
   useEffect(() => {
-    const bootstrap = async () => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
       try {
-        const storedToken = await SecureStore.getItemAsync(TOKEN_KEY);
-        if (storedToken) {
-          setToken(storedToken);
-          const profile = await getProfileFromToken(storedToken);
-          setUser(profile);
+        if (firebaseUser) {
+          // User đã đăng nhập
+          const userProfile = await getUserFromFirebaseUser(firebaseUser);
+          const idToken = await firebaseUser.getIdToken();
+          setUser(userProfile);
+          setToken(idToken);
+        } else {
+          // User đã đăng xuất
+          setUser(null);
+          setToken(null);
         }
-      } catch (e) {
-        // ignore bootstrap errors, treat as logged out
+      } catch (error) {
+        console.error('Error in auth state change:', error);
+        setUser(null);
+        setToken(null);
       } finally {
         setInitializing(false);
       }
-    };
-    bootstrap();
+    });
+
+    return unsubscribe; // Cleanup subscription on unmount
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
     const res = await loginApi({ email, password });
-    setToken(res.token);
-    await SecureStore.setItemAsync(TOKEN_KEY, res.token);
-    setUser(res.user);
+    // Auth state sẽ được cập nhật tự động bởi onAuthStateChanged
+    // Không cần set state ở đây vì Firebase sẽ tự động trigger onAuthStateChanged
   }, []);
 
   const register = useCallback(async (name: string, email: string, password: string) => {
     const res = await registerApi({ name, email, password });
-    setToken(res.token);
-    await SecureStore.setItemAsync(TOKEN_KEY, res.token);
-    setUser(res.user);
+    // Auth state sẽ được cập nhật tự động bởi onAuthStateChanged
+    // Không cần set state ở đây vì Firebase sẽ tự động trigger onAuthStateChanged
   }, []);
 
   const logout = useCallback(async () => {
-    setUser(null);
-    setToken(null);
-    await SecureStore.deleteItemAsync(TOKEN_KEY);
+    try {
+      await signOut(auth);
+      // Auth state sẽ được cập nhật tự động bởi onAuthStateChanged
+    } catch (error) {
+      console.error('Error signing out:', error);
+      throw error;
+    }
   }, []);
 
   const resetPassword = useCallback(async (email: string) => {
-    // TODO: Implement actual password reset API call
-    // For now, we'll just simulate a successful request
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    console.log('Password reset email sent to:', email);
+    await resetPasswordApi(email);
   }, []);
 
   const value = useMemo(
