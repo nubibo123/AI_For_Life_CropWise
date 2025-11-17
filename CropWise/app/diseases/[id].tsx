@@ -18,6 +18,7 @@ export default function DiseaseDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [activeTab, setActiveTab] = useState<'treatment' | 'prevention'>('treatment');
   
   const disease = getDiseaseById(id as string);
 
@@ -197,32 +198,75 @@ export default function DiseaseDetailScreen() {
           ))}
         </View>
 
-        {/* Treatment */}
+        {/* Treatment and Prevention - Tabs */}
         <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Ionicons name="medical" size={24} color="#4CAF50" />
-            <Text style={styles.sectionTitle}>Điều trị / Ngăn chặn</Text>
-          </View>
-          {disease.treatment.map((treatment, index) => (
-            <View key={index} style={styles.listItem}>
-              <View style={[styles.bullet, { backgroundColor: '#4CAF50' }]} />
-              <Text style={styles.listText}>{treatment}</Text>
-            </View>
-          ))}
-        </View>
+          {/* Tab Headers */}
+          <View style={styles.tabContainer}>
+            <TouchableOpacity
+              style={[
+                styles.tab,
+                activeTab === 'treatment' && styles.activeTab
+              ]}
+              onPress={() => setActiveTab('treatment')}
+            >
+              <Ionicons 
+                name="medical" 
+                size={20} 
+                color={activeTab === 'treatment' ? '#4CAF50' : '#999'} 
+              />
+              <Text style={[
+                styles.tabText,
+                activeTab === 'treatment' && styles.activeTabText
+              ]}>
+                Điều trị
+              </Text>
+            </TouchableOpacity>
 
-        {/* Prevention */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Ionicons name="shield-checkmark" size={24} color="#FF9800" />
-            <Text style={styles.sectionTitle}>Biện pháp phòng ngừa</Text>
+            <View style={styles.tabDivider} />
+
+            <TouchableOpacity
+              style={[
+                styles.tab,
+                activeTab === 'prevention' && styles.activeTab
+              ]}
+              onPress={() => setActiveTab('prevention')}
+            >
+              <Ionicons 
+                name="shield-checkmark" 
+                size={20} 
+                color={activeTab === 'prevention' ? '#FF9800' : '#999'} 
+              />
+              <Text style={[
+                styles.tabText,
+                activeTab === 'prevention' && styles.activeTabText
+              ]}>
+                Ngăn chặn
+              </Text>
+            </TouchableOpacity>
           </View>
-          {disease.prevention.map((prevention, index) => (
-            <View key={index} style={styles.listItem}>
-              <View style={[styles.bullet, { backgroundColor: '#FF9800' }]} />
-              <Text style={styles.listText}>{prevention}</Text>
-            </View>
-          ))}
+
+          {/* Tab Content */}
+          <View style={styles.tabContent}>
+            {activeTab === 'treatment' ? (
+              <>
+                {disease.treatment.map((treatment, index) => (
+                  <View key={index} style={styles.listItem}>
+                    <View style={[styles.bullet, { backgroundColor: '#4CAF50' }]} />
+                    <Text style={styles.listText}>{treatment}</Text>
+                  </View>
+                ))}
+              </>
+            ) : (
+              <>
+                {disease.prevention.map((prevention, index) => (
+                  <View key={index} style={styles.listItem}>
+                    <View style={[styles.bullet, { backgroundColor: '#FF9800' }]} />
+                    <Text style={styles.listText}>{prevention}</Text>
+                  </View>
+                ))}
+              </>
+            )}
+          </View>
         </View>
 
         <View style={{ height: 40 }} />
@@ -332,6 +376,22 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  rowSection: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  halfSection: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -367,6 +427,39 @@ const styles = StyleSheet.create({
     color: '#333',
     lineHeight: 22,
     flex: 1,
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+    marginBottom: 16,
+  },
+  tab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    gap: 8,
+  },
+  activeTab: {
+    borderBottomWidth: 3,
+    borderBottomColor: '#4CAF50',
+  },
+  tabText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#999',
+  },
+  activeTabText: {
+    color: '#000',
+  },
+  tabDivider: {
+    width: 1,
+    backgroundColor: '#E0E0E0',
+  },
+  tabContent: {
+    paddingTop: 4,
   },
   errorContainer: {
     flex: 1,

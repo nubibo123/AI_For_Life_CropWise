@@ -383,6 +383,20 @@ export const getDiseaseById = (id: string): MaizeDisease | undefined => {
   return maizeDiseases.find(disease => disease.id === id);
 };
 
+// Map API disease names to disease IDs
+export const getDiseaseIdByApiName = (apiName: string): string | undefined => {
+  const mapping: { [key: string]: string } = {
+    'Bệnh Khô Lá': 'northern-leaf-blight',
+    'Bệnh Gỉ Sắt': 'common-rust',
+    'Bệnh Sương Mai': 'downy-mildew',
+    'Bệnh Đốm Lá Xám': 'cercospora-leaf-spot',
+    'Khỏe Mạnh': 'healthy',
+    'MLN - Hoại tử (MLN)': 'mln',
+    'MSV - Virus vằn': 'msv',
+  };
+  return mapping[apiName];
+};
+
 export const getDiseasesBySeverity = (severity: 'low' | 'medium' | 'high'): MaizeDisease[] => {
   return maizeDiseases.filter(disease => disease.severity === severity);
 };
