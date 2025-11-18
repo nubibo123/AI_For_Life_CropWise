@@ -3,6 +3,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -324,14 +325,17 @@ export default function HomeScreen() {
         </View>
 
         {/* Feature Cards */}
-        <View style={styles.featuresContainer}>
-          <TouchableOpacity style={styles.featureCard}>
-            <View style={styles.featureIconContainer}>
-              <Ionicons name="calculator" size={28} color="#333" />
-            </View>
-            <Text style={styles.featureText}>Tính toán phân bón</Text>
-            <Ionicons name="chevron-forward" size={24} color="#666" />
-          </TouchableOpacity>
+          <View style={styles.featuresContainer}>
+        <TouchableOpacity 
+          style={styles.featureCard} 
+          onPress={() => router.push('/fertilizer')} // ← chuyển sang màn hình fertilizer.tsx
+        >
+          <View style={styles.featureIconContainer}>
+            <Ionicons name="calculator" size={28} color="#333" />
+          </View>
+          <Text style={styles.featureText}>Tính toán phân bón</Text>
+          <Ionicons name="chevron-forward" size={24} color="#666" />
+        </TouchableOpacity>
 
           <TouchableOpacity 
             style={styles.featureCard}
