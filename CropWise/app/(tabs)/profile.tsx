@@ -2,18 +2,31 @@ import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function ProfileScreen() {
+  const { user, logout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+      Alert.alert('Đã có lỗi xảy ra', 'Không thể đăng xuất. Vui lòng thử lại.');
+    }
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar style="dark" />
-      
+
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Tôi</Text>
@@ -27,8 +40,8 @@ export default function ProfileScreen() {
           <View style={styles.avatarContainer}>
             <Ionicons name="person" size={50} color="#666" />
           </View>
-          <Text style={styles.userName}>Người dùng</Text>
-          <Text style={styles.userEmail}>user@cropwise.com</Text>
+          <Text style={styles.userName}>{user?.name || 'Người dùng CropWise'}</Text>
+          <Text style={styles.userEmail}>{user?.email || 'Chưa có email'}</Text>
         </View>
 
         <View style={styles.menuContainer}>
@@ -64,8 +77,8 @@ export default function ProfileScreen() {
             <Ionicons name="chevron-forward" size={24} color="#666" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.menuItem, styles.logoutItem]}>
-            <View style={styles.menuIconContainer}>
+          <TouchableOpacity style={[styles.menuItem, styles.logoutItem]} onPress={handleLogout}>
+            <View style={[styles.menuIconContainer, styles.logoutIconContainer]}>
               <Ionicons name="log-out-outline" size={24} color="#F44336" />
             </View>
             <Text style={[styles.menuText, styles.logoutText]}>Đăng xuất</Text>
@@ -158,6 +171,9 @@ const styles = StyleSheet.create({
   logoutItem: {
     borderBottomWidth: 0,
     marginTop: 10,
+  },
+  logoutIconContainer: {
+    backgroundColor: '#fdecea',
   },
   logoutText: {
     color: '#F44336',

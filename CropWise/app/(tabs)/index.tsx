@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
+import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -16,12 +17,13 @@ import {
   View
 } from 'react-native';
 import { checkAPIStatus, predictDisease, PredictionResult } from '../../services/diseaseService';
+import { getDiseaseIdByApiName } from '../../services/maizeDiseases';
 import { getWeatherByCoords, WeatherData } from '../../services/weatherService';
 
 const { width } = Dimensions.get('window');
 
 export default function HomeScreen() {
-    const router = useRouter(); // ← thêm dòng này
+  const router = useRouter();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -335,7 +337,10 @@ export default function HomeScreen() {
           <Ionicons name="chevron-forward" size={24} color="#666" />
         </TouchableOpacity>
 
-          <TouchableOpacity style={styles.featureCard}>
+          <TouchableOpacity 
+            style={styles.featureCard}
+            onPress={() => router.push('/diseases' as any)}
+          >
             <View style={styles.featureIconContainer}>
               <Ionicons name="bug" size={28} color="#333" />
             </View>
@@ -416,6 +421,23 @@ export default function HomeScreen() {
                   <Text style={styles.infoText}>{predictionResult.disease_info.treatment}</Text>
                 </View>
 
+                {/* Nút xem chi tiết điều trị - chỉ hiện nếu bệnh có trong database */}
+                {predictionResult.predicted_class !== 'Healthy' && getDiseaseIdByApiName(predictionResult.predicted_class_vi) && (
+                  <TouchableOpacity 
+                    style={styles.detailButton}
+                    onPress={() => {
+                      const diseaseId = getDiseaseIdByApiName(predictionResult.predicted_class_vi);
+                      if (diseaseId) {
+                        setShowResultModal(false);
+                        router.push({ pathname: '/diseases/[id]', params: { id: diseaseId } });
+                      }
+                    }}
+                  >
+                    <Ionicons name="medical" size={20} color="#fff" style={{ marginRight: 8 }} />
+                    <Text style={styles.detailButtonText}>Xem Cách Điều Trị Chi Tiết</Text>
+                  </TouchableOpacity>
+                )}
+
                 {/* Xác suất các bệnh khác */}
                 <View style={styles.infoSection}>
                   <Text style={styles.infoTitle}>📊 Chi tiết phân tích</Text>
@@ -435,6 +457,27 @@ export default function HomeScreen() {
                 </TouchableOpacity>
               </ScrollView>
             )}
+          </View>
+        </View>
+      </Modal>
+
+      {/* Loading Modal khi đang phân tích */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={predicting}
+        onRequestClose={() => {}}
+      >
+        <View style={styles.loadingOverlay}>
+          <View style={styles.loadingContent}>
+            <ActivityIndicator size="large" color="#4CAF50" />
+            <Text style={styles.loadingTitle}>Đang phân tích bệnh...</Text>
+            <Text style={styles.loadingSubtitle}>Vui lòng đợi trong giây lát</Text>
+            <View style={styles.loadingProgress}>
+              <View style={styles.loadingDot} />
+              <View style={[styles.loadingDot, { animationDelay: '0.2s' }]} />
+              <View style={[styles.loadingDot, { animationDelay: '0.4s' }]} />
+            </View>
           </View>
         </View>
       </Modal>
@@ -786,6 +829,21 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#2196F3',
   },
+  detailButton: {
+    backgroundColor: '#4CAF50',
+    borderRadius: 25,
+    paddingVertical: 15,
+    alignItems: 'center',
+    marginTop: 10,
+    marginBottom: 10,
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  detailButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
   closeButton: {
     backgroundColor: '#2196F3',
     borderRadius: 25,
@@ -798,5 +856,46 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '700',
+  },
+  loadingOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingContent: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 30,
+    alignItems: 'center',
+    minWidth: 250,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  loadingTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#333',
+    marginTop: 20,
+    marginBottom: 8,
+  },
+  loadingSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+  },
+  loadingProgress: {
+    flexDirection: 'row',
+    marginTop: 20,
+    gap: 8,
+  },
+  loadingDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#4CAF50',
   },
 });

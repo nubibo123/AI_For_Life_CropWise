@@ -105,7 +105,7 @@ let MOCK_POSTS: Post[] = [
     commentCount: 1,
     comments: [MOCK_COMMENTS[1]],
     cropType: 'Đậu gà & Đậu xanh',
-    tags: ['Đậu gà & Đậu xanh'],
+    tags: ['cây ngô'],
   },
   {
     id: 'post3',
@@ -186,6 +186,7 @@ export const addComment = (commentData: CreateCommentRequest): Comment => {
         user: CURRENT_USER,
         postId: post.id,
         commentId: newComment.id,
+        recipientId: ''
       });
     });
   }

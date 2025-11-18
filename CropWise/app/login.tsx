@@ -3,15 +3,15 @@ import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
 import {
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    KeyboardAvoidingView,
+    Platform,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -19,26 +19,40 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-
+  const { login } = useAuth();
+  const [errorMessage, setErrorMessage] = useState('');
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
-      // TODO: Show error message
-      console.log('Vui lòng nhập đầy đủ thông tin');
+      setErrorMessage('Vui lòng nhập đầy đủ email và mật khẩu.');
       return;
     }
 
     try {
       setLoading(true);
-      // TODO: Implement login logic
-      console.log('Logging in with:', email);
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      
+      await login(email.trim(), password);
       // Navigate to main app after successful login
       router.replace('/(tabs)');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
-      // TODO: Show error message
+      const code: string | undefined = error?.code;
+      switch (code) {
+        case 'auth/invalid-email':
+          setErrorMessage('Email không hợp lệ.');
+          break;
+        case 'auth/user-not-found':
+        case 'auth/wrong-password':
+        case 'auth/invalid-credential':
+          setErrorMessage('Email hoặc mật khẩu không đúng.');
+          break;
+        case 'auth/too-many-requests':
+          setErrorMessage('Bạn đã thử quá nhiều lần. Vui lòng thử lại sau.');
+          break;
+        case 'auth/user-disabled':
+          setErrorMessage('Tài khoản này đã bị vô hiệu hóa.');
+          break;
+        default:
+          setErrorMessage('Đăng nhập thất bại. Vui lòng thử lại.');
+      }
     } finally {
       setLoading(false);
     }
@@ -74,7 +88,10 @@ export default function LoginScreen() {
               placeholder="Email hoặc Tên đăng nhập"
               placeholderTextColor="#999"
               value={email}
-              onChangeText={setEmail}
+              onChangeText={(text) => {
+                setEmail(text);
+                if (errorMessage) setErrorMessage('');
+              }}
               autoCapitalize="none"
               keyboardType="email-address"
               autoComplete="email"
@@ -94,7 +111,10 @@ export default function LoginScreen() {
               placeholder="Mật khẩu"
               placeholderTextColor="#999"
               value={password}
-              onChangeText={setPassword}
+              onChangeText={(text) => {
+                setPassword(text);
+                if (errorMessage) setErrorMessage('');
+              }}
               secureTextEntry={!showPassword}
               autoCapitalize="none"
               autoComplete="password"
@@ -111,8 +131,17 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
 
+          {errorMessage ? (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>{errorMessage}</Text>
+            </View>
+          ) : null}
+
           {/* Forgot Password */}
-          <TouchableOpacity style={styles.forgotPassword}>
+          <TouchableOpacity
+            style={styles.forgotPassword}
+            onPress={() => router.push('/forgot-password')}
+          >
             <Text style={styles.forgotPasswordText}>Quên mật khẩu?</Text>
           </TouchableOpacity>
 
@@ -135,7 +164,7 @@ export default function LoginScreen() {
           {/* Sign Up Link */}
           <View style={styles.signUpContainer}>
             <Text style={styles.signUpText}>Chưa có tài khoản? </Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push('/register')}>
               <Text style={styles.signUpLink}>Đăng ký</Text>
             </TouchableOpacity>
           </View>
@@ -224,6 +253,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#fff',
+  },
+  errorContainer: {
+    backgroundColor: '#fdecea',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#f5c6cb',
+  },
+  errorText: {
+    color: '#c62828',
+    fontSize: 14,
   },
   signUpContainer: {
     flexDirection: 'row',

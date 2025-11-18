@@ -14,17 +14,21 @@ export interface User {
 
 export interface Comment {
   id: string;
+  authorId?: string;
   user: User;
   content: string;
   createdAt: string; // ISO date string
   likeCount: number;
   dislikeCount: number;
+  voteCount?: number;
 }
 
 export interface Post {
   id: string;
+  authorId?: string;
   user: User;
   content: string;
+  description?: string;
   title?: string;
   imageUrl?: string;
   imageUrls?: string[]; // Hỗ trợ nhiều ảnh
@@ -37,6 +41,8 @@ export interface Post {
   tags?: string[];
   userLiked?: boolean; // Người dùng hiện tại đã like chưa
   userDisliked?: boolean; // Người dùng hiện tại đã dislike chưa
+  voteCount?: number;
+  bestAnswerId?: string | null;
 }
 
 export interface CreatePostRequest {

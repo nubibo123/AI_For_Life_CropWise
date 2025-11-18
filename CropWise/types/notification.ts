@@ -15,6 +15,8 @@ export type NotificationType =
 
 export interface Notification {
   id: string;
+  recipientId: string;
+  actorId?: string;
   type: NotificationType;
   title: string;
   message: string;
