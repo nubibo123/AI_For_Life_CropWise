@@ -1,7 +1,7 @@
 // Service để gọi API phân loại bệnh cây ngô
 
 // ⚠️ THAY ĐỔI URL NÀY SAU KHI DEPLOY LÊN RENDER
-const API_URL = 'https://cropwise-api-lkjt.onrender.com'; // Thay bằng URL từ Render
+const API_URL = 'https://nubibo-cropwise-api.hf.space'; // Thay bằng URL từ Render
 
 // ---- LOCAL DEVELOPMENT (comment lại khi đã deploy) ----
 // const API_URL = 'http://192.168.0.106:8001'; // Cho Expo Go trên điện thoại/emulator
