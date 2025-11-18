@@ -35,6 +35,17 @@ export default function TabLayout() {
           ),
         }}
       />
+      
+      <Tabs.Screen
+        name="fertilizer"
+        options={{
+          title: 'Phân bón',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "flask" : "flask-outline"} size={24} color={color} />
+          ),
+        }}
+      />
+
       <Tabs.Screen
         name="community"
         options={{
