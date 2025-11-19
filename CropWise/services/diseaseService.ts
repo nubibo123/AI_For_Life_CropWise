@@ -1,13 +1,14 @@
 // Service để gọi API phân loại bệnh cây ngô
 
-// ⚠️ THAY ĐỔI URL NÀY SAU KHI DEPLOY LÊN RENDER
-const API_URL = 'https://nubibo-cropwise-api.hf.space'; // Thay bằng URL từ Render
+// THAY ĐỔI URL NÀY SAU KHI DEPLOY LÊN RENDER
+//const API_URL = 'https://nubibo-cropwise-api.hf.space'; // Thay bằng URL từ Render
 
 // ---- LOCAL DEVELOPMENT (comment lại khi đã deploy) ----
 // const API_URL = 'http://192.168.0.106:8001'; // Cho Expo Go trên điện thoại/emulator
 // const API_URL = 'http://10.0.2.2:8001'; // Cho Android emulator (không dùng Expo Go)
 // const API_URL = 'http://localhost:8001'; // Cho web
 
+const API_URL = 'https://indexless-lilyana-subprofessionally.ngrok-free.dev';
 export interface DiseaseInfo {
   name: string;
   description: string;
@@ -64,6 +65,7 @@ export const predictDisease = async (imageUri: string): Promise<PredictionResult
       body: formData,
       headers: {
         'Accept': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
       },
     });
 
