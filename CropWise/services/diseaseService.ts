@@ -102,3 +102,91 @@ export const checkAPIStatus = async (): Promise<boolean> => {
     return false;
   }
 };
+
+export interface BatchPredictionResult {
+  filename: string;
+  success: boolean;
+  predicted_class?: string;
+  predicted_class_vi?: string;
+  confidence?: number;
+  disease_info?: DiseaseInfo;
+  all_predictions?: {
+    [key: string]: PredictionDetail;
+  };
+  error?: string;
+  imageUri?: string; // Thêm để hiển thị ảnh gốc
+}
+
+export interface BatchResponse {
+  success: boolean;
+  processed: number;
+  failed: number;
+  results: BatchPredictionResult[];
+  error?: string;
+}
+
+export const predictDiseasesBatch = async (imageUris: string[]): Promise<BatchResponse | null> => {
+  try {
+    console.log('🔄 Đang gửi nhiều ảnh đến API...');
+    console.log('📷 Số lượng ảnh:', imageUris.length);
+    console.log('🌐 API URL:', `${API_URL}/predict-batch`);
+
+    const formData = new FormData();
+    
+    // Thêm tất cả ảnh vào FormData
+    for (let i = 0; i < imageUris.length; i++) {
+      const imageUri = imageUris[i];
+      const uriParts = imageUri.split('/');
+      const filename = uriParts[uriParts.length - 1] || `image_${i}.jpg`;
+      
+      let type = 'image/jpeg';
+      if (filename.endsWith('.png')) type = 'image/png';
+      else if (filename.endsWith('.jpg') || filename.endsWith('.jpeg')) type = 'image/jpeg';
+
+      formData.append('files', {
+        uri: imageUri,
+        name: filename,
+        type: type,
+      } as any);
+    }
+
+    console.log('📤 Uploading', imageUris.length, 'images...');
+
+    const apiResponse = await fetch(`${API_URL}/predict-batch`, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'Accept': 'application/json',
+      },
+    });
+
+    console.log('📥 Response status:', apiResponse.status);
+    console.log('📥 Response ok:', apiResponse.ok);
+
+    if (!apiResponse.ok) {
+      const errorText = await apiResponse.text();
+      console.error('❌ API Error Response:', errorText);
+      throw new Error(`API request failed with status: ${apiResponse.status}`);
+    }
+
+    const result: BatchResponse = await apiResponse.json();
+    
+    // Thêm imageUri vào mỗi result để hiển thị
+    result.results = result.results.map((r, idx) => ({
+      ...r,
+      imageUri: imageUris[idx]
+    }));
+    
+    console.log('✅ Batch prediction result:', result);
+
+    return result;
+  } catch (error) {
+    console.error('❌ Error predicting diseases batch:', error);
+    console.error('❌ Error name:', (error as Error).name);
+    console.error('❌ Error message:', (error as Error).message);
+    if ((error as any).stack) {
+      console.error('❌ Stack trace:', (error as any).stack);
+    }
+    return null;
+  }
+};

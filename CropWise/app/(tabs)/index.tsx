@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator';
 import * as Location from 'expo-location';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
@@ -15,7 +16,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
-import { checkAPIStatus, predictDisease, PredictionResult } from '../../services/diseaseService';
+import { checkAPIStatus, predictDisease, predictDiseasesBatch, PredictionResult, BatchResponse } from '../../services/diseaseService';
 import { getDiseaseIdByApiName } from '../../services/maizeDiseases';
 import { getWeatherByCoords, WeatherData } from '../../services/weatherService';
 
@@ -35,6 +36,8 @@ export default function HomeScreen() {
   const [predicting, setPredicting] = useState(false);
   const [predictionResult, setPredictionResult] = useState<PredictionResult | null>(null);
   const [showResultModal, setShowResultModal] = useState(false);
+  const [batchResults, setBatchResults] = useState<BatchResponse | null>(null);
+  const [showBatchModal, setShowBatchModal] = useState(false);
 
   useEffect(() => {
     checkLocationPermission();
@@ -110,6 +113,31 @@ export default function HomeScreen() {
     }
   };
 
+  // Tiền xử lý ảnh để tăng độ chính xác
+  const preprocessImage = async (imageUri: string): Promise<string> => {
+    try {
+      console.log('🔧 Đang tiền xử lý ảnh...');
+      
+      const manipResult = await ImageManipulator.manipulateAsync(
+        imageUri,
+        [
+          // Resize về kích thước tối ưu (256x256 như model)
+          { resize: { width: 256, height: 256 } }
+        ],
+        { 
+          compress: 0.9, // Giảm dung lượng nhưng giữ chất lượng
+          format: ImageManipulator.SaveFormat.JPEG 
+        }
+      );
+      
+      console.log('✅ Tiền xử lý hoàn tất');
+      return manipResult.uri;
+    } catch (error) {
+      console.error('Lỗi khi tiền xử lý ảnh:', error);
+      return imageUri; // Trả về ảnh gốc nếu có lỗi
+    }
+  };
+
   const pickImage = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
@@ -127,8 +155,9 @@ export default function HomeScreen() {
     if (!result.canceled) {
       const imageUri = result.assets[0].uri;
       setSelectedImage(imageUri);
-      // Tự động phân tích bệnh sau khi chụp ảnh
-      await analyzeDiseaseFromImage(imageUri);
+      // Tiền xử lý ảnh trước khi phân tích
+      const processedUri = await preprocessImage(imageUri);
+      await analyzeDiseaseFromImage(processedUri);
     }
   };
 
@@ -149,14 +178,129 @@ export default function HomeScreen() {
     if (!result.canceled) {
       const imageUri = result.assets[0].uri;
       setSelectedImage(imageUri);
-      // Tự động phân tích bệnh sau khi chọn ảnh
-      await analyzeDiseaseFromImage(imageUri);
+      // Tiền xử lý ảnh trước khi phân tích
+      const processedUri = await preprocessImage(imageUri);
+      await analyzeDiseaseFromImage(processedUri);
+    }
+  };
+
+  const pickMultipleImages = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      alert('Xin lỗi, chúng tôi cần quyền truy cập thư viện ảnh!');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsMultipleSelection: true,
+      quality: 1,
+    });
+
+    if (!result.canceled && result.assets.length > 0) {
+      const imageUris = result.assets.map(asset => asset.uri);
+      // Tiền xử lý tất cả ảnh trước khi phân tích batch
+      console.log('🔧 Đang tiền xử lý', imageUris.length, 'ảnh...');
+      const processedUris = await Promise.all(
+        imageUris.map(uri => preprocessImage(uri))
+      );
+      await analyzeDiseasesBatch(processedUris);
+    }
+  };
+
+  const analyzeDiseasesBatch = async (imageUris: string[]) => {
+    try {
+      setPredicting(true);
+      setShowBatchModal(true); // Mở modal ngay
+      setBatchResults({ success: true, processed: 0, failed: 0, results: [] }); // Khởi tạo empty
+      
+      console.log('🔍 Đang phân tích', imageUris.length, 'ảnh...');
+
+      // Kiểm tra API có sẵn không
+      const apiAvailable = await checkAPIStatus();
+      if (!apiAvailable) {
+        alert('⚠️ Không thể kết nối đến server AI. Vui lòng đảm bảo server đang chạy!');
+        setPredicting(false);
+        setShowBatchModal(false);
+        return;
+      }
+
+      // Phân tích từng ảnh một và cập nhật kết quả ngay
+      const allResults: any[] = [];
+      let processed = 0;
+      let failed = 0;
+
+      for (let i = 0; i < imageUris.length; i++) {
+        try {
+          console.log(`🔍 Đang phân tích ảnh ${i + 1}/${imageUris.length}...`);
+          
+          const result = await predictDisease(imageUris[i]);
+          
+          if (result && result.success) {
+            allResults.push({
+              filename: `image_${i + 1}`,
+              success: true,
+              predicted_class: result.predicted_class,
+              predicted_class_vi: result.predicted_class_vi,
+              confidence: result.confidence,
+              disease_info: result.disease_info,
+              all_predictions: result.all_predictions,
+              imageUri: imageUris[i]
+            });
+            processed++;
+          } else {
+            allResults.push({
+              filename: `image_${i + 1}`,
+              success: false,
+              error: 'Không thể phân tích ảnh',
+              imageUri: imageUris[i]
+            });
+            failed++;
+          }
+          
+          // Cập nhật kết quả ngay sau mỗi ảnh
+          setBatchResults({
+            success: true,
+            processed,
+            failed,
+            results: [...allResults]
+          });
+          
+        } catch (error) {
+          console.error(`Error analyzing image ${i + 1}:`, error);
+          allResults.push({
+            filename: `image_${i + 1}`,
+            success: false,
+            error: String(error),
+            imageUri: imageUris[i]
+          });
+          failed++;
+          
+          // Cập nhật kết quả kể cả khi lỗi
+          setBatchResults({
+            success: true,
+            processed,
+            failed,
+            results: [...allResults]
+          });
+        }
+      }
+
+      console.log('✅ Phân tích hoàn tất:', processed, 'thành công,', failed, 'thất bại');
+      
+    } catch (error) {
+      console.error('Error analyzing diseases batch:', error);
+      alert('Lỗi khi phân tích: ' + error);
+      setShowBatchModal(false);
+    } finally {
+      setPredicting(false);
     }
   };
 
   const analyzeDiseaseFromImage = async (imageUri: string) => {
     try {
       setPredicting(true);
+      setSelectedImage(imageUri); // Lưu ảnh để hiển thị trong loading
       console.log('🔍 Đang phân tích bệnh...');
 
       // Kiểm tra API có sẵn không
@@ -321,6 +465,17 @@ export default function HomeScreen() {
               {predicting ? 'Đang phân tích...' : 'Chọn từ thư viện'}
             </Text>
           </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.captureButton, styles.batchButton]} 
+            onPress={pickMultipleImages}
+            disabled={predicting}
+          >
+            <Ionicons name="albums" size={20} color="#FF9800" style={{ marginRight: 8 }} />
+            <Text style={[styles.captureButtonText, styles.batchButtonText]}>
+              {predicting ? 'Đang phân tích...' : 'Chọn nhiều ảnh'}
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* Feature Cards */}
@@ -460,23 +615,132 @@ export default function HomeScreen() {
         </View>
       </Modal>
 
-      {/* Loading Modal khi đang phân tích */}
+      {/* Loading Modal cho ảnh đơn */}
       <Modal
         animationType="fade"
         transparent={true}
-        visible={predicting}
+        visible={predicting && !showBatchModal}
         onRequestClose={() => {}}
       >
         <View style={styles.loadingOverlay}>
-          <View style={styles.loadingContent}>
-            <ActivityIndicator size="large" color="#4CAF50" />
-            <Text style={styles.loadingTitle}>Đang phân tích bệnh...</Text>
-            <Text style={styles.loadingSubtitle}>Vui lòng đợi trong giây lát</Text>
-            <View style={styles.loadingProgress}>
-              <View style={styles.loadingDot} />
-              <View style={[styles.loadingDot, { animationDelay: '0.2s' }]} />
-              <View style={[styles.loadingDot, { animationDelay: '0.4s' }]} />
+          <View style={styles.singleLoadingContent}>
+            {selectedImage && (
+              <Image source={{ uri: selectedImage }} style={styles.loadingImage} />
+            )}
+            <View style={styles.loadingIndicatorContainer}>
+              <ActivityIndicator size="large" color="#4CAF50" />
+              <Text style={styles.loadingTitle}>Đang phân tích bệnh...</Text>
+              <Text style={styles.loadingSubtitle}>Vui lòng đợi trong giây lát</Text>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal hiển thị kết quả batch */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={showBatchModal}
+        onRequestClose={() => setShowBatchModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Kết quả phân tích hàng loạt</Text>
+              <TouchableOpacity onPress={() => setShowBatchModal(false)}>
+                <Ionicons name="close" size={28} color="#333" />
+              </TouchableOpacity>
+            </View>
+
+            {batchResults && (
+              <ScrollView style={styles.modalBody}>
+                {/* Tóm tắt với progress */}
+                <View style={styles.batchSummary}>
+                  <View style={styles.summaryItem}>
+                    <Ionicons name="images" size={24} color="#2196F3" />
+                    <Text style={styles.summaryText}>
+                      {batchResults.results.length} / {batchResults.processed + batchResults.failed + (predicting ? 1 : 0)} ảnh
+                    </Text>
+                  </View>
+                  <View style={styles.summaryItem}>
+                    <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
+                    <Text style={styles.summaryText}>Thành công: {batchResults.processed}</Text>
+                  </View>
+                  {batchResults.failed > 0 && (
+                    <View style={styles.summaryItem}>
+                      <Ionicons name="close-circle" size={24} color="#F44336" />
+                      <Text style={styles.summaryText}>Thất bại: {batchResults.failed}</Text>
+                    </View>
+                  )}
+                </View>
+
+                {predicting && batchResults.results.length === 0 && (
+                  <View style={styles.batchLoadingState}>
+                    <ActivityIndicator size="large" color="#4CAF50" />
+                    <Text style={styles.batchLoadingText}>Đang bắt đầu phân tích...</Text>
+                  </View>
+                )}
+
+                {predicting && batchResults.results.length > 0 && (
+                  <View style={styles.batchProcessingIndicator}>
+                    <ActivityIndicator size="small" color="#4CAF50" />
+                    <Text style={styles.batchProcessingText}>Đang phân tích ảnh tiếp theo...</Text>
+                  </View>
+                )}
+
+                {/* Kết quả từng ảnh */}
+                {batchResults.results.map((result, index) => (
+                  <View key={index} style={styles.batchResultItem}>
+                    {result.imageUri && (
+                      <Image source={{ uri: result.imageUri }} style={styles.batchResultImage} />
+                    )}
+                    
+                    {result.success ? (
+                      <View style={styles.batchResultContent}>
+                        <View style={styles.batchResultHeader}>
+                          <Ionicons 
+                            name={result.predicted_class === 'Healthy' ? 'checkmark-circle' : 'warning'} 
+                            size={24} 
+                            color={result.predicted_class === 'Healthy' ? '#4CAF50' : '#FF6B35'} 
+                          />
+                          <Text style={styles.batchResultName}>{result.disease_info?.name}</Text>
+                        </View>
+                        <Text style={styles.batchResultConfidence}>
+                          Độ tin cậy: {result.confidence?.toFixed(1)}%
+                        </Text>
+                        
+                        {result.predicted_class !== 'Healthy' && result.predicted_class_vi && getDiseaseIdByApiName(result.predicted_class_vi) && (
+                          <TouchableOpacity 
+                            style={styles.batchDetailButton}
+                            onPress={() => {
+                              const diseaseId = getDiseaseIdByApiName(result.predicted_class_vi!);
+                              if (diseaseId) {
+                                setShowBatchModal(false);
+                                router.push({ pathname: '/diseases/[id]', params: { id: diseaseId } });
+                              }
+                            }}
+                          >
+                            <Ionicons name="information-circle" size={16} color="#4CAF50" />
+                            <Text style={styles.batchDetailButtonText}>Xem chi tiết</Text>
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                    ) : (
+                      <View style={styles.batchResultContent}>
+                        <Text style={styles.batchErrorText}>Lỗi: {result.error}</Text>
+                      </View>
+                    )}
+                  </View>
+                ))}
+
+                <TouchableOpacity 
+                  style={styles.closeButton}
+                  onPress={() => setShowBatchModal(false)}
+                >
+                  <Text style={styles.closeButtonText}>Đóng</Text>
+                </TouchableOpacity>
+              </ScrollView>
+            )}
           </View>
         </View>
       </Modal>
@@ -856,23 +1120,140 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
   },
+  batchButton: {
+    backgroundColor: '#fff',
+    borderWidth: 2,
+    borderColor: '#FF9800',
+    marginTop: 10,
+  },
+  batchButtonText: {
+    color: '#FF9800',
+  },
+  batchSummary: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    padding: 15,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 12,
+    marginBottom: 20,
+  },
+  summaryItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  summaryText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  batchResultItem: {
+    backgroundColor: '#fff',
+    borderRadius: 15,
+    padding: 15,
+    marginBottom: 15,
+    flexDirection: 'row',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  batchResultImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 10,
+    marginRight: 15,
+  },
+  batchResultContent: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  batchResultHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    gap: 8,
+  },
+  batchResultName: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#333',
+    flex: 1,
+  },
+  batchResultConfidence: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 8,
+  },
+  batchDetailButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 6,
+  },
+  batchDetailButtonText: {
+    fontSize: 14,
+    color: '#4CAF50',
+    fontWeight: '600',
+  },
+  batchErrorText: {
+    fontSize: 14,
+    color: '#F44336',
+    fontStyle: 'italic',
+  },
+  batchLoadingState: {
+    padding: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  batchLoadingText: {
+    marginTop: 15,
+    fontSize: 16,
+    color: '#666',
+  },
+  batchProcessingIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
+    backgroundColor: '#E8F5E9',
+    borderRadius: 10,
+    marginBottom: 15,
+    gap: 10,
+  },
+  batchProcessingText: {
+    fontSize: 14,
+    color: '#4CAF50',
+    fontWeight: '600',
+  },
   loadingOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 20,
   },
-  loadingContent: {
+  singleLoadingContent: {
+    width: '90%',
+    maxWidth: 400,
     backgroundColor: '#fff',
     borderRadius: 20,
-    padding: 30,
-    alignItems: 'center',
-    minWidth: 250,
+    overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
+  },
+  loadingImage: {
+    width: '100%',
+    height: 250,
+    backgroundColor: '#f0f0f0',
+  },
+  loadingIndicatorContainer: {
+    padding: 30,
+    alignItems: 'center',
   },
   loadingTitle: {
     fontSize: 18,
@@ -885,16 +1266,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     textAlign: 'center',
-  },
-  loadingProgress: {
-    flexDirection: 'row',
-    marginTop: 20,
-    gap: 8,
-  },
-  loadingDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#4CAF50',
   },
 });
