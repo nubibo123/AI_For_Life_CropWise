@@ -38,6 +38,9 @@ export default function HomeScreen() {
   const [showResultModal, setShowResultModal] = useState(false);
   const [batchResults, setBatchResults] = useState<BatchResponse | null>(null);
   const [showBatchModal, setShowBatchModal] = useState(false);
+  const [showImageZoom, setShowImageZoom] = useState(false);
+  const [zoomedImage, setZoomedImage] = useState<{ uri: string; bbox?: number[] } | null>(null);
+  const [imageLayout, setImageLayout] = useState<{ width: number; height: number } | null>(null);
 
   useEffect(() => {
     checkLocationPermission();
@@ -60,6 +63,16 @@ export default function HomeScreen() {
   const fetchWeather = async () => {
     try {
       setLoading(true);
+      
+      // Kiểm tra quyền truy cập trước
+      const { status } = await Location.getForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        alert('⚠️ Vui lòng cấp quyền truy cập vị trí để xem thông tin thời tiết!');
+        setLocationGranted(false);
+        setLoading(false);
+        return;
+      }
+      
       const location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
       });
@@ -85,9 +98,16 @@ export default function HomeScreen() {
       } else {
         alert('Không thể lấy dữ liệu thời tiết. Vui lòng thử lại!');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching weather:', error);
-      alert('Lỗi khi lấy thông tin thời tiết: ' + error);
+      
+      // Xử lý các loại lỗi cụ thể
+      if (error.message?.includes('location') || error.message?.includes('Location')) {
+        alert('📍 Không thể lấy vị trí.\n\nVui lòng:\n• Bật dịch vụ định vị trên thiết bị\n• Cho phép ứng dụng truy cập vị trí\n• Thử lại sau');
+        setLocationGranted(false);
+      } else {
+        alert('❌ Lỗi khi lấy thông tin thời tiết.\n\nVui lòng kiểm tra kết nối internet và thử lại!');
+      }
     } finally {
       setLoading(false);
     }
@@ -99,44 +119,22 @@ export default function HomeScreen() {
       const { status } = await Location.requestForegroundPermissionsAsync();
       
       if (status !== 'granted') {
-        alert('Xin lỗi, chúng tôi cần quyền truy cập vị trí để cung cấp thông tin thời tiết!');
+        alert('⚠️ Quyền truy cập vị trí bị từ chối\n\nĐể xem thông tin thời tiết, vui lòng:\n1. Vào Cài đặt thiết bị\n2. Tìm ứng dụng CropWise\n3. Bật quyền "Vị trí"');
         setLoading(false);
         return;
       }
 
       setLocationGranted(true);
       await fetchWeather();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error requesting location:', error);
-      alert('Không thể yêu cầu quyền vị trí. Vui lòng thử lại!');
+      alert('❌ Không thể yêu cầu quyền vị trí\n\nVui lòng:\n• Bật dịch vụ định vị trên thiết bị\n• Thử lại sau');
       setLoading(false);
     }
   };
 
-  // Tiền xử lý ảnh để tăng độ chính xác
-  const preprocessImage = async (imageUri: string): Promise<string> => {
-    try {
-      console.log('🔧 Đang tiền xử lý ảnh...');
-      
-      const manipResult = await ImageManipulator.manipulateAsync(
-        imageUri,
-        [
-          // Resize về kích thước tối ưu (256x256 như model)
-          { resize: { width: 256, height: 256 } }
-        ],
-        { 
-          compress: 0.9, // Giảm dung lượng nhưng giữ chất lượng
-          format: ImageManipulator.SaveFormat.JPEG 
-        }
-      );
-      
-      console.log('✅ Tiền xử lý hoàn tất');
-      return manipResult.uri;
-    } catch (error) {
-      console.error('Lỗi khi tiền xử lý ảnh:', error);
-      return imageUri; // Trả về ảnh gốc nếu có lỗi
-    }
-  };
+  // Đã bỏ preprocessImage - gửi ảnh gốc trực tiếp không crop/resize
+  // Model YOLO sẽ tự detect và crop vùng lá
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -147,17 +145,14 @@ export default function HomeScreen() {
 
     const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [4, 3],
       quality: 1,
     });
 
     if (!result.canceled) {
       const imageUri = result.assets[0].uri;
       setSelectedImage(imageUri);
-      // Tiền xử lý ảnh trước khi phân tích
-      const processedUri = await preprocessImage(imageUri);
-      await analyzeDiseaseFromImage(processedUri);
+      // Gửi ảnh gốc không crop
+      await analyzeDiseaseFromImage(imageUri);
     }
   };
 
@@ -170,17 +165,14 @@ export default function HomeScreen() {
 
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [4, 3],
       quality: 1,
     });
 
     if (!result.canceled) {
       const imageUri = result.assets[0].uri;
       setSelectedImage(imageUri);
-      // Tiền xử lý ảnh trước khi phân tích
-      const processedUri = await preprocessImage(imageUri);
-      await analyzeDiseaseFromImage(processedUri);
+      // Gửi ảnh gốc không crop
+      await analyzeDiseaseFromImage(imageUri);
     }
   };
 
@@ -199,12 +191,9 @@ export default function HomeScreen() {
 
     if (!result.canceled && result.assets.length > 0) {
       const imageUris = result.assets.map(asset => asset.uri);
-      // Tiền xử lý tất cả ảnh trước khi phân tích batch
-      console.log('🔧 Đang tiền xử lý', imageUris.length, 'ảnh...');
-      const processedUris = await Promise.all(
-        imageUris.map(uri => preprocessImage(uri))
-      );
-      await analyzeDiseasesBatch(processedUris);
+      // Gửi ảnh gốc không crop
+      console.log('📷 Đang phân tích', imageUris.length, 'ảnh...');
+      await analyzeDiseasesBatch(imageUris);
     }
   };
 
@@ -212,7 +201,7 @@ export default function HomeScreen() {
     try {
       setPredicting(true);
       setShowBatchModal(true); // Mở modal ngay
-      setBatchResults({ success: true, processed: 0, failed: 0, results: [] }); // Khởi tạo empty
+      setBatchResults({ success: true, processed: 0, failed: 0, total: imageUris.length, results: [] }); // Khởi tạo empty
       
       console.log('🔍 Đang phân tích', imageUris.length, 'ảnh...');
 
@@ -237,6 +226,7 @@ export default function HomeScreen() {
           const result = await predictDisease(imageUris[i]);
           
           if (result && result.success) {
+            console.log(`📦 Ảnh ${i + 1} - leaf_bbox:`, result.leaf_bbox);
             allResults.push({
               filename: `image_${i + 1}`,
               success: true,
@@ -245,6 +235,7 @@ export default function HomeScreen() {
               confidence: result.confidence,
               disease_info: result.disease_info,
               all_predictions: result.all_predictions,
+              leaf_bbox: result.leaf_bbox,
               imageUri: imageUris[i]
             });
             processed++;
@@ -263,6 +254,7 @@ export default function HomeScreen() {
             success: true,
             processed,
             failed,
+            total: imageUris.length,
             results: [...allResults]
           });
           
@@ -281,6 +273,7 @@ export default function HomeScreen() {
             success: true,
             processed,
             failed,
+            total: imageUris.length,
             results: [...allResults]
           });
         }
@@ -289,7 +282,7 @@ export default function HomeScreen() {
       console.log('✅ Phân tích hoàn tất:', processed, 'thành công,', failed, 'thất bại');
       
     } catch (error) {
-      console.error('Error analyzing diseases batch:', error);
+      console.error('❌ Lỗi khi phân tích nhiều ảnh:', error);
       alert('Lỗi khi phân tích: ' + error);
       setShowBatchModal(false);
     } finally {
@@ -317,6 +310,7 @@ export default function HomeScreen() {
         setPredictionResult(result);
         setShowResultModal(true);
         console.log('✅ Phân tích thành công:', result.predicted_class_vi);
+        console.log('📦 Bounding box data:', result.leaf_bbox);
       } else {
         alert('❌ Không thể phân tích ảnh. Vui lòng thử lại!');
       }
@@ -355,7 +349,10 @@ export default function HomeScreen() {
         {/* Weather Card */}
         <View style={styles.weatherCard}>
           {loading ? (
-            <ActivityIndicator size="large" color="#F9A825" />
+            <View style={styles.weatherLoadingContainer}>
+              <ActivityIndicator size="large" color="#F9A825" />
+              <Text style={styles.weatherLoadingText}>Đang tải thời tiết...</Text>
+            </View>
           ) : weather ? (
             <>
               <View style={styles.weatherLeft}>
@@ -378,11 +375,24 @@ export default function HomeScreen() {
                 />
               </View>
             </>
+          ) : locationGranted ? (
+            <View style={styles.weatherErrorContainer}>
+              <Ionicons name="cloud-offline-outline" size={50} color="#F9A825" />
+              <Text style={styles.weatherErrorTitle}>Không thể tải thời tiết</Text>
+              <TouchableOpacity 
+                style={styles.weatherRetryButton}
+                onPress={fetchWeather}
+              >
+                <Ionicons name="refresh" size={18} color="#fff" />
+                <Text style={styles.weatherRetryText}>Thử lại</Text>
+              </TouchableOpacity>
+            </View>
           ) : (
             <>
               <View style={styles.weatherLeft}>
-                <Text style={styles.weatherTitle}>Hôm nay, 31 Th10</Text>
-                <Text style={styles.weatherSubtitle}>Nhấn "Cho phép" để xem thời tiết</Text>
+                <Ionicons name="location-outline" size={24} color="#F9A825" style={{ marginBottom: 8 }} />
+                <Text style={styles.weatherTitle}>Thời tiết địa phương</Text>
+                <Text style={styles.weatherSubtitle}>Cần quyền truy cập vị trí để hiển thị</Text>
               </View>
               <View style={styles.weatherRight}>
                 <Ionicons name="cloud-outline" size={50} color="#F9A825" />
@@ -395,17 +405,27 @@ export default function HomeScreen() {
         {!locationGranted && (
           <View style={styles.locationCard}>
             <View style={styles.locationContent}>
-              <Ionicons name="location" size={24} color="#666" />
-              <Text style={styles.locationText}>Yêu cầu cho phép định vị</Text>
+              <View style={styles.locationIconContainer}>
+                <Ionicons name="location" size={28} color="#FF9800" />
+              </View>
+              <View style={styles.locationTextContainer}>
+                <Text style={styles.locationTitle}>Bật định vị</Text>
+                <Text style={styles.locationSubtitle}>Để xem thời tiết và dự báo chính xác</Text>
+              </View>
             </View>
             <TouchableOpacity 
-              style={styles.locationButton}
+              style={[styles.locationButton, loading && styles.locationButtonDisabled]}
               onPress={requestLocationAndFetchWeather}
               disabled={loading}
             >
-              <Text style={styles.locationButtonText}>
-                {loading ? 'Đang tải...' : 'Cho phép'}
-              </Text>
+              {loading ? (
+                <ActivityIndicator size="small" color="#FF9800" />
+              ) : (
+                <>
+                  <Ionicons name="checkmark-circle" size={20} color="#FF9800" />
+                  <Text style={styles.locationButtonText}>Cho phép</Text>
+                </>
+              )}
             </TouchableOpacity>
           </View>
         )}
@@ -529,7 +549,30 @@ export default function HomeScreen() {
               <ScrollView style={styles.modalBody}>
                 {/* Ảnh đã phân tích */}
                 {selectedImage && (
-                  <Image source={{ uri: selectedImage }} style={styles.resultImage} />
+                  <TouchableOpacity 
+                    onPress={() => {
+                      console.log('🔍 Opening zoom modal...');
+                      console.log('📦 predictionResult.leaf_bbox:', predictionResult.leaf_bbox);
+                      console.log('🖼️ selectedImage:', selectedImage);
+                      const zoomData = { 
+                        uri: selectedImage, 
+                        bbox: predictionResult.leaf_bbox 
+                      };
+                      console.log('✅ Setting zoomedImage to:', zoomData);
+                      setZoomedImage(zoomData);
+                      setShowImageZoom(true);
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <View style={styles.resultImageContainer}>
+                      <Image source={{ uri: selectedImage }} style={styles.resultImage} />
+                      {predictionResult.leaf_bbox && (
+                        <View style={styles.bboxOverlay}>
+                          <Text style={styles.bboxLabel}>🍃 Nhấn để xem vùng lá phát hiện</Text>
+                        </View>
+                      )}
+                    </View>
+                  </TouchableOpacity>
                 )}
 
                 {/* Kết quả chính */}
@@ -545,19 +588,19 @@ export default function HomeScreen() {
                     />
                     <View style={styles.resultHeaderText}>
                       <Text style={styles.resultLabel}>Chẩn đoán:</Text>
-                      <Text style={styles.resultDiseaseName}>{predictionResult.disease_info.name}</Text>
+                      <Text style={styles.resultDiseaseName}>{predictionResult.disease_info?.name}</Text>
                     </View>
                   </View>
                   
                   <View style={styles.confidenceBar}>
                     <Text style={styles.confidenceLabel}>Độ tin cậy:</Text>
-                    <Text style={styles.confidenceValue}>{predictionResult.confidence.toFixed(1)}%</Text>
+                    <Text style={styles.confidenceValue}>{predictionResult.confidence?.toFixed(1)}%</Text>
                   </View>
                   <View style={styles.progressBar}>
                     <View 
                       style={[
                         styles.progressFill, 
-                        { width: `${predictionResult.confidence}%` }
+                        { width: `${predictionResult.confidence || 0}%` }
                       ]} 
                     />
                   </View>
@@ -566,21 +609,21 @@ export default function HomeScreen() {
                 {/* Mô tả bệnh */}
                 <View style={styles.infoSection}>
                   <Text style={styles.infoTitle}>📋 Mô tả</Text>
-                  <Text style={styles.infoText}>{predictionResult.disease_info.description}</Text>
+                  <Text style={styles.infoText}>{predictionResult.disease_info?.description}</Text>
                 </View>
 
                 {/* Phương pháp điều trị */}
                 <View style={styles.infoSection}>
                   <Text style={styles.infoTitle}>💊 Phương pháp điều trị</Text>
-                  <Text style={styles.infoText}>{predictionResult.disease_info.treatment}</Text>
+                  <Text style={styles.infoText}>{predictionResult.disease_info?.treatment}</Text>
                 </View>
 
                 {/* Nút xem chi tiết điều trị - chỉ hiện nếu bệnh có trong database */}
-                {predictionResult.predicted_class !== 'Healthy' && getDiseaseIdByApiName(predictionResult.predicted_class_vi) && (
+                {predictionResult.predicted_class !== 'Healthy' && predictionResult.predicted_class_vi && getDiseaseIdByApiName(predictionResult.predicted_class_vi) && (
                   <TouchableOpacity 
                     style={styles.detailButton}
                     onPress={() => {
-                      const diseaseId = getDiseaseIdByApiName(predictionResult.predicted_class_vi);
+                      const diseaseId = predictionResult.predicted_class_vi && getDiseaseIdByApiName(predictionResult.predicted_class_vi);
                       if (diseaseId) {
                         setShowResultModal(false);
                         router.push({ pathname: '/diseases/[id]', params: { id: diseaseId } });
@@ -595,7 +638,7 @@ export default function HomeScreen() {
                 {/* Xác suất các bệnh khác */}
                 <View style={styles.infoSection}>
                   <Text style={styles.infoTitle}>📊 Chi tiết phân tích</Text>
-                  {Object.entries(predictionResult.all_predictions).map(([disease, data]) => (
+                  {predictionResult.all_predictions && Object.entries(predictionResult.all_predictions).map(([disease, data]) => (
                     <View key={disease} style={styles.probabilityRow}>
                       <Text style={styles.probabilityLabel}>{disease}</Text>
                       <Text style={styles.probabilityValue}>{data.probability.toFixed(1)}%</Text>
@@ -612,6 +655,138 @@ export default function HomeScreen() {
               </ScrollView>
             )}
           </View>
+        </View>
+      </Modal>
+
+      {/* Modal phóng to ảnh với bounding box */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={showImageZoom}
+        onRequestClose={() => setShowImageZoom(false)}
+      >
+        <View style={styles.zoomOverlay}>
+          <TouchableOpacity 
+            style={styles.zoomCloseButton}
+            onPress={() => setShowImageZoom(false)}
+          >
+            <Ionicons name="close-circle" size={40} color="#fff" />
+          </TouchableOpacity>
+          
+          {zoomedImage && (() => {
+            console.log('🎯 In Modal - zoomedImage:', zoomedImage);
+            console.log('🎯 In Modal - zoomedImage.bbox:', zoomedImage.bbox);
+            console.log('🎯 In Modal - typeof bbox:', typeof zoomedImage.bbox);
+            console.log('🎯 In Modal - Array.isArray(bbox):', Array.isArray(zoomedImage.bbox));
+            
+            return (
+            <View style={styles.zoomImageContainer}>
+              <View 
+                style={{ width: '100%', height: '100%', position: 'relative', justifyContent: 'center', alignItems: 'center' }}
+                onLayout={(e) => {
+                  const { width: layoutWidth, height: layoutHeight } = e.nativeEvent.layout;
+                  // Tính kích thước ảnh khi contain (assume ảnh vuông 256x256)
+                  const imageSize = Math.min(layoutWidth, layoutHeight);
+                  setImageLayout({ width: imageSize, height: imageSize });
+                }}
+              >
+                <View style={{ width: imageLayout?.width || '100%', height: imageLayout?.height || '100%', position: 'relative' }}>
+                  <Image 
+                    source={{ uri: zoomedImage.uri }} 
+                    style={{ width: '100%', height: '100%' }}
+                    resizeMode="contain"
+                  />
+                  
+                  {/* Vẽ bounding box trên ảnh */}
+                  {zoomedImage.bbox && Array.isArray(zoomedImage.bbox) && zoomedImage.bbox.length === 4 && imageLayout && (() => {
+                    const [x1, y1, x2, y2] = zoomedImage.bbox;
+                    const bboxWidth = x2 - x1;
+                    const bboxHeight = y2 - y1;
+                    
+                    // Ảnh gốc là 256x256 (model size)
+                    const originalSize = 256;
+                    const scale = imageLayout.width / originalSize;
+                    
+                    // Tính vị trí scaled
+                    const scaledX = x1 * scale;
+                    const scaledY = y1 * scale;
+                    const scaledWidth = bboxWidth * scale;
+                    const scaledHeight = bboxHeight * scale;
+                    
+                    console.log('🎨 Drawing bbox:', { 
+                      original: { x1, y1, x2, y2 },
+                      layout: imageLayout,
+                      scale, 
+                      scaled: { x: scaledX, y: scaledY, width: scaledWidth, height: scaledHeight }
+                    });
+                    
+                    return (
+                      <View 
+                        style={{
+                          position: 'absolute',
+                          left: scaledX,
+                          top: scaledY,
+                          width: scaledWidth,
+                          height: scaledHeight,
+                          borderWidth: 4,
+                          borderColor: '#4CAF50',
+                          backgroundColor: 'rgba(76, 175, 80, 0.15)',
+                        }}
+                      >
+                        {/* Label góc trên */}
+                        <View style={{
+                          position: 'absolute',
+                          top: -32,
+                          left: -2,
+                          backgroundColor: '#4CAF50',
+                          paddingHorizontal: 12,
+                          paddingVertical: 6,
+                          borderRadius: 8,
+                          shadowColor: '#000',
+                          shadowOffset: { width: 0, height: 2 },
+                          shadowOpacity: 0.3,
+                          shadowRadius: 4,
+                          elevation: 5,
+                        }}>
+                          <Text style={{ color: '#fff', fontSize: 13, fontWeight: 'bold' }}>
+                            🍃 Lá phát hiện
+                          </Text>
+                        </View>
+                        
+                        {/* Corner markers */}
+                        <View style={{ position: 'absolute', top: -2, left: -2, width: 20, height: 20, borderTopWidth: 4, borderLeftWidth: 4, borderColor: '#4CAF50' }} />
+                        <View style={{ position: 'absolute', top: -2, right: -2, width: 20, height: 20, borderTopWidth: 4, borderRightWidth: 4, borderColor: '#4CAF50' }} />
+                        <View style={{ position: 'absolute', bottom: -2, left: -2, width: 20, height: 20, borderBottomWidth: 4, borderLeftWidth: 4, borderColor: '#4CAF50' }} />
+                        <View style={{ position: 'absolute', bottom: -2, right: -2, width: 20, height: 20, borderBottomWidth: 4, borderRightWidth: 4, borderColor: '#4CAF50' }} />
+                      </View>
+                    );
+                  })()}
+                </View>
+              </View>
+              
+              {/* Thông tin bbox rút gọn */}
+              {zoomedImage.bbox && Array.isArray(zoomedImage.bbox) && zoomedImage.bbox.length === 4 ? (
+                <View style={styles.bboxInfo}>
+                  <View style={styles.bboxInfoHeader}>
+                    <Ionicons name="scan" size={20} color="#4CAF50" />
+                    <Text style={styles.bboxInfoTitle}>Vùng lá: {Math.round(zoomedImage.bbox[2] - zoomedImage.bbox[0])}×{Math.round(zoomedImage.bbox[3] - zoomedImage.bbox[1])} px</Text>
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.bboxInfo}>
+                  <Text style={styles.bboxInfoSubtext}>Không phát hiện vùng lá</Text>
+                </View>
+              )}
+            </View>
+            );
+          })()}
+          
+          <TouchableOpacity 
+            style={styles.zoomDoneButton}
+            onPress={() => setShowImageZoom(false)}
+          >
+            <Text style={styles.zoomDoneButtonText}>Đóng</Text>
+          </TouchableOpacity>
         </View>
       </Modal>
 
@@ -692,7 +867,27 @@ export default function HomeScreen() {
                 {batchResults.results.map((result, index) => (
                   <View key={index} style={styles.batchResultItem}>
                     {result.imageUri && (
-                      <Image source={{ uri: result.imageUri }} style={styles.batchResultImage} />
+                      <TouchableOpacity
+                        onPress={() => {
+                          console.log('🔍 Batch - Opening zoom for image', index + 1);
+                          console.log('📦 Batch - result.leaf_bbox:', result.leaf_bbox);
+                          setZoomedImage({ 
+                            uri: result.imageUri!, 
+                            bbox: result.leaf_bbox 
+                          });
+                          setShowImageZoom(true);
+                        }}
+                        activeOpacity={0.8}
+                      >
+                        <View>
+                          <Image source={{ uri: result.imageUri }} style={styles.batchResultImage} />
+                          {result.leaf_bbox && (
+                            <View style={styles.batchBboxBadge}>
+                              <Ionicons name="scan" size={12} color="#fff" />
+                            </View>
+                          )}
+                        </View>
+                      </TouchableOpacity>
                     )}
                     
                     {result.success ? (
@@ -820,19 +1015,49 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   locationCard: {
-    backgroundColor: '#FFE0B2',
+    backgroundColor: '#FFF3E0',
     marginHorizontal: 15,
     marginTop: 10,
     borderRadius: 15,
-    padding: 15,
+    padding: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#FFE0B2',
+    shadowColor: '#FF9800',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   locationContent: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
+  },
+  locationIconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#FFE0B2',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  locationTextContainer: {
+    flex: 1,
+  },
+  locationTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: 4,
+  },
+  locationSubtitle: {
+    fontSize: 13,
+    color: '#666',
+    lineHeight: 18,
   },
   locationText: {
     fontSize: 14,
@@ -842,13 +1067,64 @@ const styles = StyleSheet.create({
   locationButton: {
     backgroundColor: '#FFF',
     paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingVertical: 10,
+    borderRadius: 25,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderWidth: 2,
+    borderColor: '#FF9800',
+    shadowColor: '#FF9800',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  locationButtonDisabled: {
+    opacity: 0.6,
   },
   locationButtonText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FF9800',
+  },
+  weatherLoadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  weatherLoadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: '#666',
+  },
+  weatherErrorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  weatherErrorTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#666',
+    marginTop: 12,
+    marginBottom: 16,
+  },
+  weatherRetryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#F9A825',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+  },
+  weatherRetryText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: '#fff',
   },
   diseaseSection: {
     backgroundColor: '#fff',
@@ -994,11 +1270,140 @@ const styles = StyleSheet.create({
   modalBody: {
     padding: 20,
   },
+  resultImageContainer: {
+    position: 'relative',
+    marginBottom: 20,
+  },
   resultImage: {
     width: '100%',
     height: 200,
     borderRadius: 15,
-    marginBottom: 20,
+  },
+  bboxOverlay: {
+    position: 'absolute',
+    bottom: 10,
+    left: 10,
+    right: 10,
+    backgroundColor: 'rgba(76, 175, 80, 0.9)',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  bboxLabel: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  zoomOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  zoomCloseButton: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    zIndex: 10,
+  },
+  zoomImageContainer: {
+    width: '100%',
+    height: '70%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  zoomedImage: {
+    width: '100%',
+    height: '100%',
+  },
+  bboxInfo: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 15,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  bboxInfoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+    gap: 10,
+  },
+  bboxInfoTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#333',
+  },
+  bboxInfoText: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 6,
+    fontFamily: 'monospace',
+  },
+  bboxInfoSubtext: {
+    fontSize: 13,
+    color: '#4CAF50',
+    fontWeight: '600',
+  },
+  bboxCoordinates: {
+    marginVertical: 8,
+    padding: 10,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 8,
+  },
+  bboxCoordText: {
+    fontSize: 14,
+    color: '#333',
+    fontFamily: 'monospace',
+    fontWeight: '600',
+    flex: 1,
+    textAlign: 'right',
+  },
+  bboxCoordRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  bboxCoordLabel: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
+  },
+  bboxDimensions: {
+    marginTop: 8,
+    padding: 8,
+    backgroundColor: '#E8F5E9',
+    borderRadius: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: '#4CAF50',
+  },
+  bboxDimensionText: {
+    fontSize: 13,
+    color: '#2E7D32',
+    fontWeight: '600',
+  },
+  zoomDoneButton: {
+    position: 'absolute',
+    bottom: 40,
+    backgroundColor: '#4CAF50',
+    paddingHorizontal: 40,
+    paddingVertical: 15,
+    borderRadius: 25,
+  },
+  zoomDoneButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
   },
   resultCard: {
     padding: 20,
@@ -1164,6 +1569,17 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 10,
     marginRight: 15,
+  },
+  batchBboxBadge: {
+    position: 'absolute',
+    top: 5,
+    right: 20,
+    backgroundColor: 'rgba(76, 175, 80, 0.9)',
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   batchResultContent: {
     flex: 1,
