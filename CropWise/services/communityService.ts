@@ -116,6 +116,83 @@ const logFirestoreError = (error: unknown, context: string) => {
   }
 };
 
+type MinimalUserProfile = {
+  name: string;
+  avatarUrl: string | null | undefined;
+};
+
+const defaultUserProfile: MinimalUserProfile = {
+  name: 'Người dùng',
+  avatarUrl: null,
+};
+
+const userProfileCache = new Map<string, MinimalUserProfile>();
+
+const fetchUserProfile = async (userId: string): Promise<MinimalUserProfile> => {
+  try {
+    const snap = await getDoc(doc(db, 'users', userId));
+    if (snap.exists()) {
+      const data = snap.data() ?? {};
+      const profile: MinimalUserProfile = {
+        name: data.name ?? defaultUserProfile.name,
+        avatarUrl: data.avatarUrl ?? data.photoURL ?? defaultUserProfile.avatarUrl,
+      };
+      userProfileCache.set(userId, profile);
+      return profile;
+    }
+  } catch (error) {
+    logFirestoreError(error, `fetchUserProfile(${userId})`);
+  }
+  const fallbackProfile: MinimalUserProfile = { ...defaultUserProfile };
+  userProfileCache.set(userId, fallbackProfile);
+  return fallbackProfile;
+};
+
+const getUserProfile = async (
+  userId?: string | null,
+  fallbackName?: string,
+  fallbackAvatar?: string | null
+): Promise<MinimalUserProfile> => {
+  if (!userId) {
+    return {
+      name: fallbackName ?? defaultUserProfile.name,
+      avatarUrl: fallbackAvatar ?? defaultUserProfile.avatarUrl,
+    };
+  }
+  if (userProfileCache.has(userId)) {
+    const cached = userProfileCache.get(userId)!;
+    return {
+      name: cached.name ?? fallbackName ?? defaultUserProfile.name,
+      avatarUrl: cached.avatarUrl ?? fallbackAvatar ?? defaultUserProfile.avatarUrl,
+    };
+  }
+  const profile = await fetchUserProfile(userId);
+  return {
+    name: profile.name ?? fallbackName ?? defaultUserProfile.name,
+    avatarUrl: profile.avatarUrl ?? fallbackAvatar ?? defaultUserProfile.avatarUrl,
+  };
+};
+
+type EntityWithUser = { user: Comment['user']; authorId?: string };
+
+const hydrateEntityUser = async <T extends EntityWithUser>(entity: T): Promise<T> => {
+  const profile = await getUserProfile(entity.authorId ?? entity.user.id, entity.user.name, entity.user.avatarUrl ?? null);
+  return {
+    ...entity,
+    user: {
+      ...entity.user,
+      name: profile.name,
+      avatarUrl: profile.avatarUrl ?? undefined,
+    },
+  };
+};
+
+const hydratePostsUsers = async (posts: Post[]): Promise<Post[]> =>
+  Promise.all(posts.map((post) => hydrateEntityUser(post)));
+
+const hydrateCommentsUsers = async (comments: Comment[]): Promise<Comment[]> =>
+  Promise.all(comments.map((comment) => hydrateEntityUser(comment)));
+
 /**
  * Realtime danh sách bài đăng (sorted by createdAt desc)
  */
@@ -127,14 +204,15 @@ export const subscribeToCommunityPosts = (
 
   const unsubscribe = onSnapshot(postsQuery, async (snapshot) => {
     const rawPosts = snapshot.docs.map((docSnap) => mapPost(docSnap.id, docSnap.data()));
+    const hydratedPosts = await hydratePostsUsers(rawPosts);
 
     if (!currentUser) {
-      callback(rawPosts);
+      callback(hydratedPosts);
       return;
     }
 
     const postsWithVote = await Promise.all(
-      rawPosts.map((post) => attachUserVote(post, currentUser.uid))
+      hydratedPosts.map((post) => attachUserVote(post, currentUser.uid))
     );
     callback(postsWithVote);
   }, (error) => {
@@ -152,12 +230,13 @@ export const getCommunityPosts = async (): Promise<Post[]> => {
     const snapshot = await getDocs(query(collection(db, 'posts'), orderBy('createdAt', 'desc')));
     const currentUser = auth.currentUser;
     const posts = snapshot.docs.map((docSnap) => mapPost(docSnap.id, docSnap.data()));
+    const hydratedPosts = await hydratePostsUsers(posts);
 
     if (!currentUser) {
-      return posts;
+      return hydratedPosts;
     }
 
-    return await Promise.all(posts.map((post) => attachUserVote(post, currentUser.uid)));
+    return await Promise.all(hydratedPosts.map((post) => attachUserVote(post, currentUser.uid)));
   } catch (error) {
     logFirestoreError(error, 'getCommunityPosts');
     throw error;
@@ -171,7 +250,7 @@ export const getPostById = async (id: string): Promise<Post | null> => {
   try {
     const snap = await getDoc(doc(db, 'posts', id));
     if (!snap.exists()) return null;
-    const post = mapPost(snap.id, snap.data());
+    const post = await hydrateEntityUser(mapPost(snap.id, snap.data()));
     const currentUser = auth.currentUser;
     if (!currentUser) return post;
     return await attachUserVote(post, currentUser.uid);
@@ -194,12 +273,13 @@ export const getPostsByCropType = async (cropType: string): Promise<Post[]> => {
     const snapshot = await getDocs(postsQuery);
     const currentUser = auth.currentUser;
     const posts = snapshot.docs.map((docSnap) => mapPost(docSnap.id, docSnap.data()));
+    const hydratedPosts = await hydratePostsUsers(posts);
 
     if (!currentUser) {
-      return posts;
+      return hydratedPosts;
     }
 
-    return await Promise.all(posts.map((post) => attachUserVote(post, currentUser.uid)));
+    return await Promise.all(hydratedPosts.map((post) => attachUserVote(post, currentUser.uid)));
   } catch (error) {
     logFirestoreError(error, `getPostsByCropType(${cropType})`);
     throw error;
@@ -260,7 +340,8 @@ export const createPost = async (postData: CreatePostRequest): Promise<Post | nu
 
     const snap = await getDoc(postRef);
     if (!snap.exists()) return null;
-    return applyUserVoteToPost(mapPost(snap.id, snap.data()), 0);
+    const hydratedPost = await hydrateEntityUser(mapPost(snap.id, snap.data()));
+    return applyUserVoteToPost(hydratedPost, 0);
   } catch (error) {
     logFirestoreError(error, 'createPost');
     throw error;
@@ -333,7 +414,8 @@ export const likePost = async (likeData: LikePostRequest): Promise<Post | null> 
       });
     }
 
-    return applyUserVoteToPost(mapPost(updatedSnap.id, updatedSnap.data()), nextValue);
+    const hydratedPost = await hydrateEntityUser(mapPost(updatedSnap.id, updatedSnap.data()));
+    return applyUserVoteToPost(hydratedPost, nextValue);
   } catch (error) {
     logFirestoreError(error, `likePost(${likeData.postId})`);
     throw error;
@@ -372,20 +454,21 @@ export const subscribeToPost = (
     });
   };
 
-  const unsubscribePost = onSnapshot(postRef, (snap) => {
+  const unsubscribePost = onSnapshot(postRef, async (snap) => {
     if (!snap.exists()) {
       postData = null;
       notify();
       return;
     }
-    postData = mapPost(snap.id, snap.data());
+    postData = await hydrateEntityUser(mapPost(snap.id, snap.data()));
     notify();
   }, (error) => {
     logFirestoreError(error, `subscribeToPost(${postId})`);
   });
 
-  const unsubscribeComments = onSnapshot(commentsQuery, (snapshot) => {
-    commentsData = snapshot.docs.map((docSnap) => mapComment(docSnap.id, docSnap.data()));
+  const unsubscribeComments = onSnapshot(commentsQuery, async (snapshot) => {
+    const rawComments = snapshot.docs.map((docSnap) => mapComment(docSnap.id, docSnap.data()));
+    commentsData = await hydrateCommentsUsers(rawComments);
     notify();
   }, (error) => {
     logFirestoreError(error, `subscribeToPost(${postId})/comments`);
@@ -463,7 +546,8 @@ export const createCommentRealtime = async (
       });
     }
 
-    return mapComment(snap.id, snap.data());
+    const comment = mapComment(snap.id, snap.data());
+    return hydrateEntityUser(comment);
   } catch (error) {
     logFirestoreError(error, `createCommentRealtime(${commentData.postId})`);
     throw error;
