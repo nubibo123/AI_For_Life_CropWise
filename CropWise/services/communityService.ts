@@ -27,6 +27,7 @@ import {
 } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { createNotification } from './notificationService';
+import { uploadImageToCloudinary, uploadMultipleImages } from './cloudinaryService';
 
 const mapPost = (id: string, data: any): Post => ({
   id,
@@ -213,6 +214,31 @@ export const createPost = async (postData: CreatePostRequest): Promise<Post | nu
   if (!user) throw new Error('Not authenticated');
 
   try {
+    // Upload ảnh lên Cloudinary nếu có
+    let cloudinaryImageUrl: string | null = null;
+    let cloudinaryImageUrls: string[] | null = null;
+
+    if (postData.imageUrl) {
+      console.log('📤 Đang upload ảnh đơn lên Cloudinary...');
+      const result = await uploadImageToCloudinary(postData.imageUrl, 'cropwise/community');
+      if (result.success && result.url) {
+        cloudinaryImageUrl = result.url;
+        console.log('✅ Upload ảnh thành công:', cloudinaryImageUrl);
+      } else {
+        console.error('❌ Upload ảnh thất bại:', result.error);
+        throw new Error('Không thể upload ảnh. Vui lòng thử lại.');
+      }
+    }
+
+    if (postData.imageUrls && postData.imageUrls.length > 0) {
+      console.log('📤 Đang upload nhiều ảnh lên Cloudinary...');
+      cloudinaryImageUrls = await uploadMultipleImages(postData.imageUrls, 'cropwise/community');
+      if (cloudinaryImageUrls.length === 0) {
+        throw new Error('Không thể upload ảnh. Vui lòng thử lại.');
+      }
+      console.log(`✅ Upload ${cloudinaryImageUrls.length} ảnh thành công`);
+    }
+
     const postRef = await addDoc(collection(db, 'posts'), {
       authorId: user.uid,
       authorName: user.displayName ?? null,
@@ -220,8 +246,8 @@ export const createPost = async (postData: CreatePostRequest): Promise<Post | nu
       title: postData.title ?? null,
       content: postData.content,
       description: postData.description ?? null,
-      imageUrl: postData.imageUrl ?? null,
-      imageUrls: postData.imageUrls ?? null,
+      imageUrl: cloudinaryImageUrl,
+      imageUrls: cloudinaryImageUrls,
       cropType: postData.cropType ?? null,
       tags: postData.tags ?? null,
       likeCount: 0,

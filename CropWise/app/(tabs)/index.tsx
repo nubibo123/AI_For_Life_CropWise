@@ -133,8 +133,30 @@ export default function HomeScreen() {
     }
   };
 
-  // Đã bỏ preprocessImage - gửi ảnh gốc trực tiếp không crop/resize
-  // Model YOLO sẽ tự detect và crop vùng lá
+  // Tiền xử lý ảnh để tăng độ chính xác
+  const preprocessImage = async (imageUri: string): Promise<string> => {
+    try {
+      console.log('🔧 Đang tiền xử lý ảnh...');
+      
+      const manipResult = await ImageManipulator.manipulateAsync(
+        imageUri,
+        [
+          // Resize về kích thước tối ưu (256x256 như model)
+          { resize: { width: 256, height: 256 } }
+        ],
+        { 
+          compress: 0.9, // Giảm dung lượng nhưng giữ chất lượng
+          format: ImageManipulator.SaveFormat.JPEG 
+        }
+      );
+      
+      console.log('✅ Tiền xử lý hoàn tất');
+      return manipResult.uri;
+    } catch (error) {
+      console.error('Lỗi khi tiền xử lý ảnh:', error);
+      return imageUri; // Trả về ảnh gốc nếu có lỗi
+    }
+  };
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -145,14 +167,16 @@ export default function HomeScreen() {
 
     const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ['images'],
+      allowsEditing: false,
       quality: 1,
     });
 
     if (!result.canceled) {
       const imageUri = result.assets[0].uri;
       setSelectedImage(imageUri);
-      // Gửi ảnh gốc không crop
-      await analyzeDiseaseFromImage(imageUri);
+      // Tiền xử lý ảnh trước khi phân tích
+      const processedUri = await preprocessImage(imageUri);
+      await analyzeDiseaseFromImage(processedUri);
     }
   };
 
@@ -165,14 +189,16 @@ export default function HomeScreen() {
 
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
+      allowsEditing: false,
       quality: 1,
     });
 
     if (!result.canceled) {
       const imageUri = result.assets[0].uri;
       setSelectedImage(imageUri);
-      // Gửi ảnh gốc không crop
-      await analyzeDiseaseFromImage(imageUri);
+      // Tiền xử lý ảnh trước khi phân tích
+      const processedUri = await preprocessImage(imageUri);
+      await analyzeDiseaseFromImage(processedUri);
     }
   };
 
@@ -191,9 +217,12 @@ export default function HomeScreen() {
 
     if (!result.canceled && result.assets.length > 0) {
       const imageUris = result.assets.map(asset => asset.uri);
-      // Gửi ảnh gốc không crop
-      console.log('📷 Đang phân tích', imageUris.length, 'ảnh...');
-      await analyzeDiseasesBatch(imageUris);
+      // Tiền xử lý tất cả ảnh trước khi phân tích batch
+      console.log('� Đang tiền xử lý', imageUris.length, 'ảnh...');
+      const processedUris = await Promise.all(
+        imageUris.map(uri => preprocessImage(uri))
+      );
+      await analyzeDiseasesBatch(processedUris);
     }
   };
 
@@ -461,6 +490,32 @@ export default function HomeScreen() {
                 <Ionicons name="medical" size={40} color="#4CAF50" />
               </View>
               <Text style={styles.processLabel}>Lấy thuốc</Text>
+            </View>
+          </View>
+
+          {/* Hướng dẫn chụp ảnh */}
+          <View style={styles.guideCard}>
+            <View style={styles.guideHeader}>
+              <Ionicons name="information-circle" size={20} color="#2196F3" />
+              <Text style={styles.guideTitle}>💡 Hướng dẫn chụp ảnh</Text>
+            </View>
+            <View style={styles.guideList}>
+              <View style={styles.guideItem}>
+                <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
+                <Text style={styles.guideText}>Chụp rõ phần lá bị bệnh</Text>
+              </View>
+              <View style={styles.guideItem}>
+                <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
+                <Text style={styles.guideText}>Đảm bảo ánh sáng đủ, không bị mờ</Text>
+              </View>
+              <View style={styles.guideItem}>
+                <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
+                <Text style={styles.guideText}>Lá chiếm phần lớn trong khung hình</Text>
+              </View>
+              <View style={styles.guideItem}>
+                <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
+                <Text style={styles.guideText}>Tránh chụp quá xa hoặc góc nghiêng</Text>
+              </View>
             </View>
           </View>
 
@@ -1087,6 +1142,45 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     color: '#FF9800',
+  },
+  guideCard: {
+    backgroundColor: '#E3F2FD',
+    borderRadius: 15,
+    padding: 16,
+    marginHorizontal: 20,
+    marginBottom: 20,
+    borderLeftWidth: 4,
+    borderLeftColor: '#2196F3',
+    shadowColor: '#2196F3',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  guideHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 8,
+  },
+  guideTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1976D2',
+  },
+  guideList: {
+    gap: 10,
+  },
+  guideItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  guideText: {
+    fontSize: 14,
+    color: '#1565C0',
+    flex: 1,
+    lineHeight: 20,
   },
   weatherLoadingContainer: {
     flex: 1,

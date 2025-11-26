@@ -63,7 +63,7 @@ export default function CreatePostScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!title.trim() && !content.trim()) {
+    if (!title.trim() && !content.trim() && !description.trim()) {
       Alert.alert('Lỗi', 'Vui lòng nhập câu hỏi hoặc mô tả');
       return;
     }
@@ -77,6 +77,11 @@ export default function CreatePostScreen() {
         imageUrl: selectedImage || undefined,
         cropType: selectedCropType || undefined,
       };
+
+      console.log('📝 Đang tạo bài đăng...');
+      if (selectedImage) {
+        console.log('📤 Bài đăng có ảnh, sẽ upload lên Cloudinary...');
+      }
 
       const newPost = await createPost(postData);
       
@@ -94,7 +99,8 @@ export default function CreatePostScreen() {
       }
     } catch (error) {
       console.error('Error creating post:', error);
-      Alert.alert('Lỗi', 'Không thể tạo bài đăng. Vui lòng thử lại.');
+      const errorMessage = error instanceof Error ? error.message : 'Không thể tạo bài đăng. Vui lòng thử lại.';
+      Alert.alert('Lỗi', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -209,7 +215,7 @@ export default function CreatePostScreen() {
           activeOpacity={0.7}
         >
           <Text style={styles.submitButtonText}>
-            {loading ? 'Đang gửi...' : 'Gửi'}
+            {loading ? (selectedImage ? 'Đang upload ảnh...' : 'Đang gửi...') : 'Gửi'}
           </Text>
         </TouchableOpacity>
       </View>
