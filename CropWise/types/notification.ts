@@ -11,7 +11,8 @@ export type NotificationType =
   | 'mention'
   | 'follow'
   | 'post_approved'
-  | 'post_rejected';
+  | 'post_rejected'
+  | 'alert';
 
 export interface Notification {
   id: string;

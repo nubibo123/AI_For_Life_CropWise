@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Redirect, Tabs } from 'expo-router';
-import { useAuth } from '../../contexts/AuthContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function TabLayout() {
   const { user, initializing } = useAuth();
@@ -45,6 +45,16 @@ export default function TabLayout() {
           title: 'Cây trồng',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'leaf' : 'leaf-outline'} size={24} color={color} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="my-field"
+        options={{
+          title: 'Ruộng của tôi',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'map' : 'map-outline'} size={24} color={color} />
           ),
         }}
       />
