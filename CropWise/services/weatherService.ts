@@ -14,6 +14,7 @@ export interface WeatherData {
   windSpeed: number;
   cityName: string;
   date: string;
+  rainVolume?: number;
 }
 
 export const getWeatherByCoords = async (
@@ -57,7 +58,12 @@ export const getWeatherByCoords = async (
       }
     }
 
-    const processedData = {
+    const rainVolume =
+      (weatherData.rain?.['1h'] as number | undefined) ??
+      (weatherData.rain?.['3h'] as number | undefined) ??
+      0;
+
+    const processedData: WeatherData = {
       temp: Math.round(weatherData.main.temp),
       tempMin: Math.round(weatherData.main.temp_min),
       tempMax: Math.round(weatherData.main.temp_max),
@@ -70,6 +76,7 @@ export const getWeatherByCoords = async (
         day: 'numeric', 
         month: 'numeric' 
       }),
+      rainVolume,
     };
     
     console.log('Processed weather data:', processedData);
@@ -104,6 +111,10 @@ export const getWeatherByCity = async (
       windSpeed: data.wind.speed,
       cityName: data.name,
       date: new Date().toLocaleDateString('vi-VN'),
+      rainVolume:
+        (data.rain?.['1h'] as number | undefined) ??
+        (data.rain?.['3h'] as number | undefined) ??
+        0,
     };
   } catch (error) {
     console.error('Error fetching weather:', error);
