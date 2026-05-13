@@ -834,7 +834,7 @@ const OutbreakModal: React.FC<OutbreakModalProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f3f4f6',
+    backgroundColor: 'transparent',
   },
   scrollContent: {
     padding: 20,
@@ -843,7 +843,7 @@ const styles = StyleSheet.create({
   screenTitle: {
     fontSize: 28,
     fontWeight: '800',
-    color: '#0f172a',
+    color: '#FFF',
   },
   headerRow: {
     flexDirection: 'row',
@@ -852,13 +852,15 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   addButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 999,
-    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    borderRadius: 20,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
   },
   addButtonText: {
     color: '#047857',
@@ -867,9 +869,9 @@ const styles = StyleSheet.create({
   weatherCard: {
     borderRadius: 20,
     padding: 20,
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: 'rgba(255, 255, 255, 0.2)',
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 20,
@@ -877,10 +879,10 @@ const styles = StyleSheet.create({
   weatherTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#0f172a',
+    color: '#FFF',
   },
   weatherSubtitle: {
-    color: '#475569',
+    color: '#E0E0E0',
     marginTop: 4,
   },
   weatherTempRow: {
@@ -892,10 +894,10 @@ const styles = StyleSheet.create({
   weatherTemp: {
     fontSize: 36,
     fontWeight: '800',
-    color: '#0f172a',
+    color: '#FFF',
   },
   weatherRange: {
-    color: '#475569',
+    color: '#E0E0E0',
     fontWeight: '600',
   },
   weatherRight: {
@@ -908,12 +910,12 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   weatherMetricText: {
-    color: '#0369a1',
+    color: '#81C784',
     fontWeight: '600',
   },
   weatherDate: {
     marginTop: 8,
-    color: '#6b7280',
+    color: '#E0E0E0',
   },
   weatherAlert: {
     marginTop: 12,
@@ -924,14 +926,14 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   alertListSubtitle: {
-    color: '#64748b',
+    color: '#E0E0E0',
     marginTop: 4,
   },
   alertCard: {
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: 'rgba(255, 255, 255, 0.2)',
     padding: 16,
     marginBottom: 14,
     shadowColor: '#000',
@@ -949,9 +951,21 @@ const styles = StyleSheet.create({
   alertTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#0f172a',
+    color: '#FFF',
     flex: 1,
     marginRight: 12,
+  },
+  issueRecommended: {
+    fontSize: 14,
+    color: '#10b981',
+    lineHeight: 20,
+    marginTop: 4,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFF',
+    marginBottom: 8,
   },
   severityPill: {
     paddingHorizontal: 10,
@@ -973,7 +987,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(239,68,68,0.2)',
   },
   alertDescription: {
-    color: '#475569',
+    color: '#E0E0E0',
     marginBottom: 6,
   },
   alertMeta: {
@@ -999,16 +1013,16 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   resultCard: {
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 20,
     padding: 20,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   resultTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#0f172a',
+    color: '#FFF',
   },
   resultSubtitle: {
     color: '#475569',
@@ -1028,14 +1042,15 @@ const styles = StyleSheet.create({
   outlineButton: {
     marginTop: 14,
     borderWidth: 1,
-    borderColor: '#0f172a',
+    borderColor: 'rgba(255, 255, 255, 0.4)',
     borderRadius: 999,
     paddingVertical: 12,
     alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   outlineButtonText: {
     fontWeight: '700',
-    color: '#0f172a',
+    color: '#FFF',
   },
   centered: {
     flex: 1,
@@ -1075,11 +1090,13 @@ const styles = StyleSheet.create({
     marginVertical: 12,
   },
   primaryButton: {
-    backgroundColor: '#10b981',
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
     borderRadius: 999,
     paddingHorizontal: 32,
     paddingVertical: 14,
     marginTop: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
   },
   primaryButtonText: {
     color: '#fff',

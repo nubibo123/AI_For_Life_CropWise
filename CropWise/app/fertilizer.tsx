@@ -163,6 +163,8 @@ if (selectedDisease === "burnt_edge") {
   });
 }
 
+    if (!bestFertilizer) return;
+
     // 3. Tính số kg phân cần thiết
     const calcKg = (need: number, percent: number) =>
       percent > 0 ? need / (percent / 100) : 0;
@@ -196,7 +198,7 @@ if (selectedDisease === "burnt_edge") {
       <View style={styles.pickerContainer}>
         <Picker
           selectedValue={selectedDisease}
-          onValueChange={(v) => setSelectedDisease(v)}
+          onValueChange={(v: string) => setSelectedDisease(v)}
         >
           <Picker.Item label="Chọn bệnh" value="" />
           <Picker.Item label="Lá vàng (thiếu N)" value="yellow_leaf" />
@@ -271,7 +273,7 @@ const styles = StyleSheet.create({
   container: {
     padding: 16,
     paddingBottom: 40,
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',
   },
   header: {
     marginBottom: 24,
@@ -279,37 +281,41 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#333',
+    color: '#FFF',
   },
   label: {
     fontSize: 14,
-    color: '#555',
+    color: '#E0E0E0',
     marginBottom: 6,
     marginTop: 16,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: 'rgba(255, 255, 255, 0.3)',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
     marginBottom: 16,
     fontSize: 16,
-    color: '#333',
+    color: '#FFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   pickerContainer: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: 'rgba(255, 255, 255, 0.3)',
     borderRadius: 8,
     overflow: 'hidden',
     marginBottom: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   button: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
     paddingVertical: 14,
     borderRadius: 10,
     alignItems: 'center',
     marginBottom: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
   },
   buttonText: {
     color: '#fff',
@@ -317,7 +323,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   resultContainer: {
-    backgroundColor: '#F1F8E9',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     padding: 16,
     borderRadius: 10,
   },
@@ -325,17 +331,17 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 12,
-    color: '#2C5F2D',
+    color: '#FFF',
   },
   npkContainer: {
-    backgroundColor: '#E8F5E9',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
     padding: 16,
     borderRadius: 10,
     marginBottom: 16,
   },
   fertilizerCard: {
     flexDirection: 'row',
-    backgroundColor: '#FFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 10,
     padding: 12,
     alignItems: 'center',
@@ -355,6 +361,6 @@ const styles = StyleSheet.create({
   fertilizerName: {
     fontWeight: '600',
     fontSize: 16,
-    color: '#2C5F2D',
+    color: '#81C784',
   },
 });

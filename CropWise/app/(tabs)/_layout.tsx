@@ -2,6 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { Redirect, Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../contexts/AuthContext';
+import { BlurView } from 'expo-blur';
+import { StyleSheet } from 'react-native';
 
 export default function TabLayout() {
   const { user, initializing } = useAuth();
@@ -18,12 +20,16 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#4CAF50',
-        tabBarInactiveTintColor: '#666',
+        tabBarActiveTintColor: '#FFF',
+        tabBarInactiveTintColor: 'rgba(255,255,255,0.5)',
+        tabBarBackground: () => (
+          <BlurView intensity={80} tint="dark" style={StyleSheet.absoluteFill} />
+        ),
         tabBarStyle: {
-          backgroundColor: '#fff',
-          borderTopWidth: 1,
-          borderTopColor: '#e0e0e0',
+          position: 'absolute',
+          backgroundColor: 'transparent',
+          borderTopWidth: 0,
+          elevation: 0,
           paddingBottom: insets.bottom > 0 ? insets.bottom : 5,
           paddingTop: 5,
           height: 60 + (insets.bottom > 0 ? insets.bottom : 0),
@@ -37,6 +43,7 @@ export default function TabLayout() {
           paddingVertical: 0,
         },
         headerShown: false,
+        sceneStyle: { backgroundColor: 'transparent' },
       }}
     >
       <Tabs.Screen

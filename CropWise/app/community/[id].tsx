@@ -337,19 +337,19 @@ export default function PostDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',
     padding: 20,
   },
   errorText: {
@@ -431,7 +431,7 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#1976D2',
+    color: '#81C784',
   },
   separator: {
     fontSize: 15,
@@ -459,12 +459,12 @@ const styles = StyleSheet.create({
   postTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#000',
+    color: '#FFF',
     marginBottom: 12,
   },
   postContentText: {
     fontSize: 15,
-    color: '#333',
+    color: '#F5F5F5',
     lineHeight: 22,
     marginBottom: 12,
   },
@@ -521,8 +521,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderTopWidth: 1,
-    borderTopColor: '#F5F5F5',
-    backgroundColor: '#fff',
+    borderTopColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'transparent',
     gap: 8,
   },
   cameraButton: {
@@ -530,12 +530,12 @@ const styles = StyleSheet.create({
   },
   replyInput: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 10,
     fontSize: 14,
-    color: '#333',
+    color: '#FFF',
     maxHeight: 100,
   },
   sendButton: {

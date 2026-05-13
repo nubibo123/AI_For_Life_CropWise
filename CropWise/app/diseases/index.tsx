@@ -148,7 +148,7 @@ export default function MaizeDiseasesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: 'transparent',
   },
   header: {
     flexDirection: 'row',
@@ -157,9 +157,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 50,
     paddingBottom: 16,
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
   },
   backButton: {
     padding: 8,
@@ -167,12 +167,12 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#000',
+    color: '#FFF',
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     marginHorizontal: 16,
     marginTop: 16,
     marginBottom: 8,
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   searchIcon: {
     marginRight: 8,
@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: '#333',
+    color: '#FFF',
   },
   scrollView: {
     flex: 1,
@@ -199,12 +199,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: '#FFF',
     marginBottom: 16,
   },
   diseaseCard: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 16,
     padding: 12,
     marginBottom: 12,
@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
   diseaseName: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#000',
+    color: '#FFF',
     flex: 1,
   },
   severityBadge: {
@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
   },
   diseaseDescription: {
     fontSize: 13,
-    color: '#666',
+    color: '#E0E0E0',
     lineHeight: 18,
     marginBottom: 8,
   },
@@ -271,7 +271,7 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 12,
-    color: '#666',
+    color: '#E0E0E0',
   },
   emptyState: {
     alignItems: 'center',

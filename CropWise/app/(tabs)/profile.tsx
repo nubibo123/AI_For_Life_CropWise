@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
+import GlassCard from '../../components/ui/GlassCard';
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
@@ -25,66 +26,66 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
 
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Tôi</Text>
         <TouchableOpacity>
-          <Ionicons name="settings-outline" size={24} color="#333" />
+          <Ionicons name="settings-outline" size={24} color="#FFF" />
         </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <View style={styles.profileCard}>
+        <GlassCard style={styles.profileCard}>
           <View style={styles.avatarContainer}>
-            <Ionicons name="person" size={50} color="#666" />
+            <Ionicons name="person" size={50} color="#E0E0E0" />
           </View>
           <Text style={styles.userName}>{user?.name || 'Người dùng CropWise'}</Text>
           <Text style={styles.userEmail}>{user?.email || 'Chưa có email'}</Text>
-        </View>
+        </GlassCard>
 
-        <View style={styles.menuContainer}>
+        <GlassCard style={styles.menuContainer}>
           <TouchableOpacity style={styles.menuItem}>
             <View style={styles.menuIconContainer}>
-              <Ionicons name="person-outline" size={24} color="#333" />
+              <Ionicons name="person-outline" size={24} color="#E0E0E0" />
             </View>
             <Text style={styles.menuText}>Thông tin cá nhân</Text>
-            <Ionicons name="chevron-forward" size={24} color="#666" />
+            <Ionicons name="chevron-forward" size={24} color="#E0E0E0" />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.menuItem}>
             <View style={styles.menuIconContainer}>
-              <Ionicons name="notifications-outline" size={24} color="#333" />
+              <Ionicons name="notifications-outline" size={24} color="#E0E0E0" />
             </View>
             <Text style={styles.menuText}>Thông báo</Text>
-            <Ionicons name="chevron-forward" size={24} color="#666" />
+            <Ionicons name="chevron-forward" size={24} color="#E0E0E0" />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.menuItem}>
             <View style={styles.menuIconContainer}>
-              <Ionicons name="help-circle-outline" size={24} color="#333" />
+              <Ionicons name="help-circle-outline" size={24} color="#E0E0E0" />
             </View>
             <Text style={styles.menuText}>Trợ giúp</Text>
-            <Ionicons name="chevron-forward" size={24} color="#666" />
+            <Ionicons name="chevron-forward" size={24} color="#E0E0E0" />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.menuItem}>
             <View style={styles.menuIconContainer}>
-              <Ionicons name="information-circle-outline" size={24} color="#333" />
+              <Ionicons name="information-circle-outline" size={24} color="#E0E0E0" />
             </View>
             <Text style={styles.menuText}>Về CropWise</Text>
-            <Ionicons name="chevron-forward" size={24} color="#666" />
+            <Ionicons name="chevron-forward" size={24} color="#E0E0E0" />
           </TouchableOpacity>
 
           <TouchableOpacity style={[styles.menuItem, styles.logoutItem]} onPress={handleLogout}>
             <View style={[styles.menuIconContainer, styles.logoutIconContainer]}>
-              <Ionicons name="log-out-outline" size={24} color="#F44336" />
+              <Ionicons name="log-out-outline" size={24} color="#FF5252" />
             </View>
             <Text style={[styles.menuText, styles.logoutText]}>Đăng xuất</Text>
-            <Ionicons name="chevron-forward" size={24} color="#F44336" />
+            <Ionicons name="chevron-forward" size={24} color="#FF5252" />
           </TouchableOpacity>
-        </View>
+        </GlassCard>
       </ScrollView>
     </View>
   );
@@ -93,7 +94,7 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: 'transparent',
   },
   header: {
     flexDirection: 'row',
@@ -102,21 +103,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 50,
     paddingBottom: 15,
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#000',
+    color: '#FFF',
   },
   scrollView: {
     flex: 1,
   },
   profileCard: {
-    backgroundColor: '#fff',
     marginHorizontal: 15,
     marginTop: 15,
-    borderRadius: 20,
     padding: 30,
     alignItems: 'center',
   },
@@ -124,7 +123,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 15,
@@ -132,18 +131,16 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#000',
+    color: '#FFF',
     marginBottom: 5,
   },
   userEmail: {
     fontSize: 14,
-    color: '#666',
+    color: '#E0E0E0',
   },
   menuContainer: {
-    backgroundColor: '#fff',
     marginHorizontal: 15,
     marginTop: 15,
-    borderRadius: 20,
     padding: 10,
   },
   menuItem: {
@@ -152,20 +149,20 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     paddingHorizontal: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
   },
   menuIconContainer: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 15,
   },
   menuText: {
     fontSize: 16,
-    color: '#333',
+    color: '#FFF',
     flex: 1,
   },
   logoutItem: {
@@ -173,10 +170,10 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   logoutIconContainer: {
-    backgroundColor: '#fdecea',
+    backgroundColor: 'rgba(255, 82, 82, 0.15)',
   },
   logoutText: {
-    color: '#F44336',
+    color: '#FF5252',
     fontWeight: '600',
   },
 });

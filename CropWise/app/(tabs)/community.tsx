@@ -5,6 +5,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -18,6 +19,7 @@ import {
   subscribeToCommunityPosts,
 } from '../../services/communityService';
 import { getNotificationCount } from '../../services/notificationService';
+import GlassCard from '../../components/ui/GlassCard';
 
 export default function CommunityScreen() {
   const router = useRouter();
@@ -113,7 +115,7 @@ export default function CommunityScreen() {
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
-      <Ionicons name="chatbubbles-outline" size={80} color="#ccc" />
+      <Ionicons name="chatbubbles-outline" size={80} color="rgba(255, 255, 255, 0.4)" />
       <Text style={styles.emptyStateText}>Chưa có bài đăng nào</Text>
       <Text style={styles.emptyStateSubtext}>
         Hãy là người đầu tiên chia sẻ!
@@ -123,26 +125,26 @@ export default function CommunityScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
 
       {/* Header với tìm kiếm */}
       <View style={styles.header}>
-        <View style={styles.searchContainer}>
-          <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
+        <GlassCard style={styles.searchContainer}>
+          <Ionicons name="search" size={20} color="#E0E0E0" style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
             placeholder="Tìm trong Cộng đồng"
-            placeholderTextColor="#999"
+            placeholderTextColor="#E0E0E0"
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
-        </View>
+        </GlassCard>
         <TouchableOpacity
           style={styles.headerButton}
           onPress={() => router.push('/notifications')}
         >
           <View style={styles.notificationButton}>
-            <Ionicons name="notifications-outline" size={24} color="#333" />
+            <Ionicons name="notifications-outline" size={24} color="#FFF" />
             {unreadNotificationCount > 0 && (
               <View style={styles.badge}>
                 <Text style={styles.badgeText}>
@@ -153,7 +155,7 @@ export default function CommunityScreen() {
           </View>
         </TouchableOpacity>
         <TouchableOpacity style={styles.headerButton}>
-          <Ionicons name="ellipsis-vertical" size={24} color="#333" />
+          <Ionicons name="ellipsis-vertical" size={24} color="#FFF" />
         </TouchableOpacity>
       </View>
 
@@ -165,35 +167,36 @@ export default function CommunityScreen() {
             <Text style={styles.changeButton}>Thay đổi</Text>
           </TouchableOpacity>
         </View>
-        <View style={styles.filterChips}>
-          <TouchableOpacity style={styles.filterChip}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterChips}>
+          <GlassCard style={styles.filterChip}>
             <Text style={styles.filterChipText}>Đậu gà & Đậu xanh</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.filterChip}>
+          </GlassCard>
+          <GlassCard style={styles.filterChip}>
             <Text style={styles.filterChipText}>Đậu tương</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.filterChip}>
+          </GlassCard>
+          <GlassCard style={styles.filterChip}>
             <Text style={styles.filterChipText}>Đậu</Text>
-          </TouchableOpacity>
-        </View>
+          </GlassCard>
+        </ScrollView>
       </View>
 
       {/* Thanh tạo bài đăng mới */}
       <TouchableOpacity
-        style={styles.createPostBar}
         onPress={handleCreatePost}
         activeOpacity={0.7}
       >
-        <View style={styles.createPostContent}>
-          <Ionicons name="create-outline" size={20} color="#1976D2" />
-          <Text style={styles.createPostText}>Tạo bài đăng mới</Text>
-        </View>
+        <GlassCard style={styles.createPostBar}>
+          <View style={styles.createPostContent}>
+            <Ionicons name="create-outline" size={20} color="#4CAF50" />
+            <Text style={styles.createPostText}>Tạo bài đăng mới</Text>
+          </View>
+        </GlassCard>
       </TouchableOpacity>
 
       {/* Danh sách bài đăng */}
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#1976D2" />
+          <ActivityIndicator size="large" color="#FFF" />
         </View>
       ) : (
         <FlatList
@@ -222,7 +225,7 @@ export default function CommunityScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: 'transparent',
   },
   header: {
     flexDirection: 'row',
@@ -230,17 +233,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 50,
     paddingBottom: 12,
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',
     gap: 8,
   },
   searchContainer: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 8,
+    marginRight: 8,
   },
   searchIcon: {
     marginRight: 8,
@@ -248,7 +251,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 14,
-    color: '#333',
+    color: '#FFF',
   },
   headerButton: {
     padding: 4,
@@ -260,7 +263,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -4,
     right: -4,
-    backgroundColor: '#E91E63',
+    backgroundColor: '#FF5252',
     borderRadius: 10,
     minWidth: 20,
     height: 20,
@@ -268,7 +271,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 6,
     borderWidth: 2,
-    borderColor: '#fff',
+    borderColor: 'transparent',
   },
   badgeText: {
     color: '#fff',
@@ -276,11 +279,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   filterSection: {
-    backgroundColor: '#fff',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F5F5F5',
   },
   filterHeader: {
     flexDirection: 'row',
@@ -291,35 +291,35 @@ const styles = StyleSheet.create({
   filterLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: '#FFF',
   },
   changeButton: {
     fontSize: 14,
-    color: '#1976D2',
+    color: '#81C784',
     fontWeight: '600',
   },
   filterChips: {
     flexDirection: 'row',
-    gap: 8,
   },
   filterChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderRadius: 20,
+    marginRight: 8,
   },
   filterChipText: {
-    fontSize: 12,
-    color: '#333',
+    fontSize: 14,
+    color: '#FFF',
+    fontWeight: '500',
   },
   createPostBar: {
-    backgroundColor: '#fff',
+    marginHorizontal: 16,
+    marginBottom: 16,
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F5F5F5',
+    paddingVertical: 14,
+    borderRadius: 15,
   },
   createPostContent: {
     flexDirection: 'row',
@@ -328,7 +328,7 @@ const styles = StyleSheet.create({
   },
   createPostText: {
     fontSize: 15,
-    color: '#1976D2',
+    color: '#81C784',
     fontWeight: '600',
   },
   listContent: {
@@ -349,19 +349,19 @@ const styles = StyleSheet.create({
   emptyStateText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#666',
+    color: '#E0E0E0',
     marginTop: 20,
   },
   emptyStateSubtext: {
     fontSize: 14,
-    color: '#999',
+    color: '#B0B0B0',
     marginTop: 8,
   },
   fab: {
     position: 'absolute',
     bottom: 80,
     right: 16,
-    backgroundColor: '#1976D2',
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
@@ -373,6 +373,8 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 8,
     gap: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
   },
   fabText: {
     color: '#fff',

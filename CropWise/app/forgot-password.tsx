@@ -7,11 +7,11 @@ import {
   Platform,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
+import GlassInput from '../components/ui/GlassInput';
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
@@ -57,12 +57,12 @@ export default function ForgotPasswordScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
 
       <View style={styles.content}>
         <View style={styles.header}>
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-            <Ionicons name="chevron-back" size={26} color="#333" />
+            <Ionicons name="chevron-back" size={26} color="#FFF" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Quên mật khẩu</Text>
           <View style={{ width: 26 }} />
@@ -76,19 +76,15 @@ export default function ForgotPasswordScreen() {
         </View>
 
         <View style={styles.form}>
-          <View style={styles.inputContainer}>
-            <Ionicons name="mail-outline" size={20} color="#999" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              placeholderTextColor="#999"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoComplete="email"
-            />
-          </View>
+          <GlassInput
+            icon="mail-outline"
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoComplete="email"
+          />
 
           {error ? (
             <View style={styles.alertError}>
@@ -125,7 +121,7 @@ export default function ForgotPasswordScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',
   },
   content: {
     flex: 1,
@@ -144,54 +140,31 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#333',
+    color: '#FFF',
   },
   description: {
     marginBottom: 24,
   },
   descriptionText: {
     fontSize: 15,
-    color: '#555',
+    color: '#E0E0E0',
     lineHeight: 22,
   },
   form: {
     width: '100%',
   },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F5F5F5',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-  },
-  inputIcon: {
-    marginRight: 12,
-  },
-  input: {
-    flex: 1,
-    fontSize: 16,
-    color: '#333',
-  },
   submitButton: {
-    backgroundColor: '#1976D2',
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
     marginTop: 8,
-    shadowColor: '#1976D2',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
   },
   submitButtonDisabled: {
-    backgroundColor: '#ccc',
-    shadowOpacity: 0,
-    elevation: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   submitButtonText: {
     fontSize: 16,
@@ -199,7 +172,7 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   alertError: {
-    backgroundColor: '#fdecea',
+    backgroundColor: 'rgba(253, 236, 234, 0.9)',
     borderRadius: 10,
     padding: 12,
     marginBottom: 12,
@@ -211,7 +184,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   alertInfo: {
-    backgroundColor: '#e6f4ea',
+    backgroundColor: 'rgba(230, 244, 234, 0.9)',
     borderRadius: 10,
     padding: 12,
     marginBottom: 12,
@@ -227,10 +200,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   backToLoginText: {
-    color: '#1976D2',
+    color: '#FFF',
     fontSize: 14,
     fontWeight: '600',
   },
 });
-
-

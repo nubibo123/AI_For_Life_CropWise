@@ -58,7 +58,7 @@ export default function Index() {
   return (
     <View style={styles.container}>
       <StatusBar style="dark" />
-      
+
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>CropWise</Text>
@@ -101,9 +101,9 @@ export default function Index() {
           <View style={styles.processContainer}>
             <View style={styles.processStep}>
               <View style={styles.processIcon}>
-                <Ionicons name="leaf" size={40} color="#2C5F2D" />
+                <Ionicons name="leaf" size={40} color="#4CAF50" />
               </View>
-              <Text style={styles.processLabel}>Chụp ảnh</Text>
+              <Text style={styles.processLabel}> ảnh</Text>
             </View>
 
             <Ionicons name="chevron-forward" size={28} color="#ccc" />
@@ -322,10 +322,12 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   captureButton: {
-    backgroundColor: '#2196F3',
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
     borderRadius: 30,
     paddingVertical: 18,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
   },
   captureButtonText: {
     color: '#fff',
@@ -401,11 +403,11 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#2196F3',
+    backgroundColor: 'rgba(16, 185, 129, 0.8)',
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 8,
-    shadowColor: '#000',
+    shadowColor: '#10B981',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 4.65,

@@ -12,6 +12,7 @@ import {
   View,
 } from 'react-native';
 import { Post } from '../types/community';
+import GlassCard from './ui/GlassCard';
 
 interface PostCardProps {
   post: Post;
@@ -77,7 +78,8 @@ export const PostCard: React.FC<PostCardProps> = ({
       onPress={onPress}
       activeOpacity={0.7}
     >
-      {/* Hình ảnh bài đăng */}
+      <GlassCard intensity={30} tint="dark">
+        {/* Hình ảnh bài đăng */}
       {post.imageUrl && (
         <Image source={{ uri: post.imageUrl }} style={styles.image} />
       )}
@@ -92,7 +94,7 @@ export const PostCard: React.FC<PostCardProps> = ({
             />
           ) : (
             <View style={styles.avatarPlaceholder}>
-              <Ionicons name="person" size={20} color="#666" />
+              <Ionicons name="person" size={20} color="rgba(255,255,255,0.6)" />
             </View>
           )}
         </View>
@@ -148,7 +150,7 @@ export const PostCard: React.FC<PostCardProps> = ({
           <Ionicons
             name={post.userLiked ? 'thumbs-up' : 'thumbs-up-outline'}
             size={20}
-            color={post.userLiked ? '#1976D2' : '#666'}
+            color={post.userLiked ? '#4CAF50' : 'rgba(255, 255, 255, 0.6)'}
           />
           <Text
             style={[
@@ -167,7 +169,7 @@ export const PostCard: React.FC<PostCardProps> = ({
           <Ionicons
             name={post.userDisliked ? 'thumbs-down' : 'thumbs-down-outline'}
             size={20}
-            color={post.userDisliked ? '#1976D2' : '#666'}
+            color={post.userDisliked ? '#F44336' : 'rgba(255, 255, 255, 0.6)'}
           />
           <Text
             style={[
@@ -183,24 +185,24 @@ export const PostCard: React.FC<PostCardProps> = ({
           onPress={handleShare}
           activeOpacity={0.7}
         >
-          <Ionicons name="share-outline" size={20} color="#666" />
+          <Ionicons name="share-outline" size={20} color="rgba(255, 255, 255, 0.6)" />
         </TouchableOpacity>
       </View>
+      </GlassCard>
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#fff',
-    marginBottom: 12,
-    borderRadius: 12,
+    marginBottom: 15,
+    borderRadius: 20,
     overflow: 'hidden',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 4,
   },
   image: {
     width: '100%',
@@ -224,7 +226,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#E3F2FD',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -236,17 +238,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   userName: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#1976D2',
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFF',
   },
   separator: {
     fontSize: 15,
-    color: '#999',
+    color: 'rgba(255, 255, 255, 0.5)',
   },
   country: {
     fontSize: 14,
-    color: '#666',
+    color: 'rgba(255, 255, 255, 0.7)',
   },
   metaRow: {
     flexDirection: 'row',
@@ -255,12 +257,12 @@ const styles = StyleSheet.create({
   },
   timeAgo: {
     fontSize: 12,
-    color: '#999',
+    color: 'rgba(255, 255, 255, 0.5)',
     marginRight: 8,
   },
   cropType: {
     fontSize: 12,
-    color: '#4CAF50',
+    color: '#81C784',
     marginLeft: 4,
   },
   content: {
@@ -268,15 +270,16 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   title: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '700',
-    color: '#000',
-    marginBottom: 6,
+    color: '#FFF',
+    marginBottom: 8,
+    lineHeight: 24,
   },
   text: {
-    fontSize: 14,
-    color: '#333',
-    lineHeight: 20,
+    fontSize: 15,
+    color: 'rgba(255, 255, 255, 0.9)',
+    lineHeight: 22,
   },
   actionRow: {
     flexDirection: 'row',
@@ -287,11 +290,12 @@ const styles = StyleSheet.create({
   },
   translateButton: {
     fontSize: 14,
-    color: '#1976D2',
+    color: '#64B5F6',
+    fontWeight: '600',
   },
   commentCount: {
     fontSize: 14,
-    color: '#666',
+    color: 'rgba(255, 255, 255, 0.6)',
   },
   interactionRow: {
     flexDirection: 'row',
@@ -299,22 +303,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingBottom: 12,
     borderTopWidth: 1,
-    borderTopColor: '#F5F5F5',
-    paddingTop: 8,
+    borderTopColor: 'rgba(255, 255, 255, 0.1)',
+    paddingTop: 12,
   },
   interactionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 20,
+    marginRight: 24,
   },
   interactionCount: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: 15,
+    color: 'rgba(255, 255, 255, 0.7)',
     marginLeft: 6,
   },
   interactionCountActive: {
-    color: '#1976D2',
-    fontWeight: '600',
+    color: '#4CAF50',
+    fontWeight: '700',
   },
 });
 

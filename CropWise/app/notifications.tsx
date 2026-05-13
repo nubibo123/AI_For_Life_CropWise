@@ -57,7 +57,6 @@ export default function NotificationsScreen() {
   };
 
   const handleNotificationPress = (notification: Notification) => {
-    // Điều hướng đến bài đăng nếu có postId
     if (notification.postId) {
       router.push(`/community/${notification.postId}`);
     }
@@ -131,7 +130,7 @@ export default function NotificationsScreen() {
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
-      <Ionicons name="notifications-outline" size={80} color="#ccc" />
+      <Ionicons name="notifications-outline" size={80} color="rgba(255, 255, 255, 0.4)" />
       <Text style={styles.emptyStateText}>
         Không tìm thấy gì để hiển thị ở đây.
       </Text>
@@ -145,7 +144,7 @@ export default function NotificationsScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
 
       {/* Header */}
       <View style={styles.header}>
@@ -153,7 +152,7 @@ export default function NotificationsScreen() {
           style={styles.backButton}
           onPress={() => router.back()}
         >
-          <Ionicons name="arrow-back" size={24} color="#000" />
+          <Ionicons name="arrow-back" size={24} color="#FFF" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Thông báo</Text>
         {unreadCount > 0 && (
@@ -170,7 +169,7 @@ export default function NotificationsScreen() {
       {/* Danh sách thông báo */}
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#1976D2" />
+          <ActivityIndicator size="large" color="#81C784" />
         </View>
       ) : (
         <FlatList
@@ -184,7 +183,7 @@ export default function NotificationsScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={handleRefresh}
-              colors={['#1976D2']}
+              colors={['#81C784']}
             />
           }
         />
@@ -196,7 +195,7 @@ export default function NotificationsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: 'transparent',
   },
   header: {
     flexDirection: 'row',
@@ -205,9 +204,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 50,
     paddingBottom: 16,
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',
     borderBottomWidth: 1,
-    borderBottomColor: '#F5F5F5',
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
   },
   backButton: {
     padding: 8,
@@ -215,7 +214,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#000',
+    color: '#FFF',
     flex: 1,
     marginLeft: 8,
   },
@@ -224,7 +223,7 @@ const styles = StyleSheet.create({
   },
   markAllText: {
     fontSize: 14,
-    color: '#1976D2',
+    color: '#81C784',
     fontWeight: '600',
   },
   placeholder: {
@@ -248,16 +247,15 @@ const styles = StyleSheet.create({
   emptyStateText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#666',
+    color: '#E0E0E0',
     marginTop: 20,
     textAlign: 'center',
   },
   emptyStateSubtext: {
     fontSize: 14,
-    color: '#999',
+    color: '#B0B0B0',
     marginTop: 8,
     textAlign: 'center',
     lineHeight: 20,
   },
 });
-

@@ -7,11 +7,11 @@ import {
     Platform,
     StyleSheet,
     Text,
-    TextInput,
     TouchableOpacity,
     View,
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
+import GlassInput from '../components/ui/GlassInput';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -21,6 +21,7 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const [errorMessage, setErrorMessage] = useState('');
+
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
       setErrorMessage('Vui lòng nhập đầy đủ email và mật khẩu.');
@@ -30,7 +31,6 @@ export default function LoginScreen() {
     try {
       setLoading(true);
       await login(email.trim(), password);
-      // Navigate to main app after successful login
       router.replace('/(tabs)');
     } catch (error: any) {
       console.error('Login error:', error);
@@ -63,73 +63,43 @@ export default function LoginScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
       
       <View style={styles.content}>
-        {/* Logo */}
         <View style={styles.logoContainer}>
-          <Ionicons name="leaf" size={80} color="#4CAF50" />
+          <Ionicons name="leaf" size={80} color="#FFF" />
           <Text style={styles.appName}>CropWise</Text>
           <Text style={styles.tagline}>Cộng đồng Nông dân</Text>
         </View>
 
-        {/* Form */}
         <View style={styles.form}>
-          {/* Email/Username Input */}
-          <View style={styles.inputContainer}>
-            <Ionicons
-              name="mail-outline"
-              size={20}
-              color="#999"
-              style={styles.inputIcon}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Email hoặc Tên đăng nhập"
-              placeholderTextColor="#999"
-              value={email}
-              onChangeText={(text) => {
-                setEmail(text);
-                if (errorMessage) setErrorMessage('');
-              }}
-              autoCapitalize="none"
-              keyboardType="email-address"
-              autoComplete="email"
-            />
-          </View>
+          <GlassInput
+            icon="mail-outline"
+            placeholder="Email hoặc Tên đăng nhập"
+            value={email}
+            onChangeText={(text) => {
+              setEmail(text);
+              if (errorMessage) setErrorMessage('');
+            }}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            autoComplete="email"
+          />
 
-          {/* Password Input */}
-          <View style={styles.inputContainer}>
-            <Ionicons
-              name="lock-closed-outline"
-              size={20}
-              color="#999"
-              style={styles.inputIcon}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Mật khẩu"
-              placeholderTextColor="#999"
-              value={password}
-              onChangeText={(text) => {
-                setPassword(text);
-                if (errorMessage) setErrorMessage('');
-              }}
-              secureTextEntry={!showPassword}
-              autoCapitalize="none"
-              autoComplete="password"
-            />
-            <TouchableOpacity
-              style={styles.eyeIcon}
-              onPress={() => setShowPassword(!showPassword)}
-            >
-              <Ionicons
-                name={showPassword ? 'eye-outline' : 'eye-off-outline'}
-                size={20}
-                color="#999"
-              />
-            </TouchableOpacity>
-          </View>
+          <GlassInput
+            icon="lock-closed-outline"
+            placeholder="Mật khẩu"
+            value={password}
+            onChangeText={(text) => {
+              setPassword(text);
+              if (errorMessage) setErrorMessage('');
+            }}
+            secureTextEntry={!showPassword}
+            autoCapitalize="none"
+            autoComplete="password"
+            rightIcon={showPassword ? 'eye-outline' : 'eye-off-outline'}
+            onRightIconPress={() => setShowPassword(!showPassword)}
+          />
 
           {errorMessage ? (
             <View style={styles.errorContainer}>
@@ -137,7 +107,6 @@ export default function LoginScreen() {
             </View>
           ) : null}
 
-          {/* Forgot Password */}
           <TouchableOpacity
             style={styles.forgotPassword}
             onPress={() => router.push('/forgot-password')}
@@ -145,7 +114,6 @@ export default function LoginScreen() {
             <Text style={styles.forgotPasswordText}>Quên mật khẩu?</Text>
           </TouchableOpacity>
 
-          {/* Login Button */}
           <TouchableOpacity
             style={[
               styles.loginButton,
@@ -161,7 +129,6 @@ export default function LoginScreen() {
             </Text>
           </TouchableOpacity>
 
-          {/* Sign Up Link */}
           <View style={styles.signUpContainer}>
             <Text style={styles.signUpText}>Chưa có tài khoản? </Text>
             <TouchableOpacity onPress={() => router.push('/register')}>
@@ -177,7 +144,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',
   },
   content: {
     flex: 1,
@@ -191,38 +158,16 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: 32,
     fontWeight: '700',
-    color: '#333',
+    color: '#FFF',
     marginTop: 16,
   },
   tagline: {
     fontSize: 16,
-    color: '#666',
+    color: '#E0E0E0',
     marginTop: 8,
   },
   form: {
     width: '100%',
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F5F5F5',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-  },
-  inputIcon: {
-    marginRight: 12,
-  },
-  input: {
-    flex: 1,
-    fontSize: 16,
-    color: '#333',
-  },
-  eyeIcon: {
-    padding: 4,
   },
   forgotPassword: {
     alignSelf: 'flex-end',
@@ -230,24 +175,21 @@ const styles = StyleSheet.create({
   },
   forgotPasswordText: {
     fontSize: 14,
-    color: '#1976D2',
+    color: '#FFF',
+    fontWeight: '500',
   },
   loginButton: {
-    backgroundColor: '#1976D2',
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
     marginBottom: 24,
-    shadowColor: '#1976D2',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
   },
   loginButtonDisabled: {
-    backgroundColor: '#ccc',
-    shadowOpacity: 0,
-    elevation: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   loginButtonText: {
     fontSize: 16,
@@ -255,7 +197,7 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   errorContainer: {
-    backgroundColor: '#fdecea',
+    backgroundColor: 'rgba(253, 236, 234, 0.9)',
     borderRadius: 10,
     padding: 12,
     marginBottom: 16,
@@ -273,12 +215,11 @@ const styles = StyleSheet.create({
   },
   signUpText: {
     fontSize: 14,
-    color: '#666',
+    color: '#E0E0E0',
   },
   signUpLink: {
     fontSize: 14,
-    color: '#1976D2',
+    color: '#FFF',
     fontWeight: '600',
   },
 });
-

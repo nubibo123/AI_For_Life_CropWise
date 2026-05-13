@@ -58,7 +58,6 @@ export default function CreatePostScreen() {
   };
 
   const handleSelectCropType = () => {
-    // TODO: Implement crop type picker modal
     Alert.alert('Chọn cây trồng', 'Tính năng đang phát triển');
   };
 
@@ -79,19 +78,14 @@ export default function CreatePostScreen() {
       };
 
       console.log('📝 Đang tạo bài đăng...');
-      if (selectedImage) {
-        console.log('📤 Bài đăng có ảnh, sẽ upload lên Cloudinary...');
-      }
-
       const newPost = await createPost(postData);
-      
+
       if (newPost) {
         Alert.alert('Thành công', 'Bài đăng đã được tạo', [
           {
             text: 'OK',
             onPress: () => {
               router.back();
-              // Refresh community feed
               router.replace('/(tabs)/community');
             },
           },
@@ -111,15 +105,15 @@ export default function CreatePostScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <StatusBar style="dark" />
-      
+      <StatusBar style="light" />
+
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => router.back()}
         >
-          <Ionicons name="arrow-back" size={24} color="#000" />
+          <Ionicons name="arrow-back" size={24} color="#FFF" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Hỏi Cộng đồng</Text>
         <View style={styles.placeholder} />
@@ -130,20 +124,18 @@ export default function CreatePostScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Thêm hình ảnh */}
         <TouchableOpacity
           style={styles.addButton}
           onPress={handlePickImage}
           activeOpacity={0.7}
         >
-          <Ionicons name="image-outline" size={24} color="#666" />
+          <Ionicons name="image-outline" size={24} color="#E0E0E0" />
           <Text style={styles.addButtonText}>Thêm hình ảnh</Text>
         </TouchableOpacity>
         <Text style={styles.hintText}>
           Cải thiện xác suất nhận được câu trả lời đúng
         </Text>
 
-        {/* Preview ảnh đã chọn */}
         {selectedImage && (
           <View style={styles.imagePreviewContainer}>
             <Image source={{ uri: selectedImage }} style={styles.imagePreview} />
@@ -156,7 +148,6 @@ export default function CreatePostScreen() {
           </View>
         )}
 
-        {/* Thêm cây trồng */}
         <TouchableOpacity
           style={styles.addButton}
           onPress={handleSelectCropType}
@@ -165,7 +156,6 @@ export default function CreatePostScreen() {
           <Text style={styles.addButtonText}>Thêm cây trồng</Text>
         </TouchableOpacity>
 
-        {/* Câu hỏi */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>
             Câu hỏi của bạn cho cộng đồng
@@ -173,7 +163,7 @@ export default function CreatePostScreen() {
           <TextInput
             style={styles.textArea}
             placeholder="Thêm một câu hỏi cho biết vấn đề với cây trồng của bạn"
-            placeholderTextColor="#999"
+            placeholderTextColor="rgba(255, 255, 255, 0.5)"
             value={title}
             onChangeText={setTitle}
             multiline
@@ -184,13 +174,12 @@ export default function CreatePostScreen() {
           </Text>
         </View>
 
-        {/* Mô tả */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Mô tả vấn đề của bạn</Text>
           <TextInput
             style={[styles.textArea, styles.descriptionArea]}
             placeholder="Mô tả các đặc trưng như thay đổi ở lá, màu rễ, bọ, chỗ rách..."
-            placeholderTextColor="#999"
+            placeholderTextColor="rgba(255, 255, 255, 0.5)"
             value={description}
             onChangeText={setDescription}
             multiline
@@ -202,16 +191,15 @@ export default function CreatePostScreen() {
         </View>
       </ScrollView>
 
-      {/* Nút Gửi */}
       <View style={styles.footer}>
         <TouchableOpacity
           style={[
             styles.submitButton,
-            (!title.trim() && !description.trim() && !content.trim() || loading) &&
-              styles.submitButtonDisabled,
+            ((!title.trim() && !description.trim() && !content.trim()) || loading) &&
+            styles.submitButtonDisabled,
           ]}
           onPress={handleSubmit}
-          disabled={(!title.trim() && !description.trim() && !content.trim()) || loading}
+          disabled={((!title.trim() && !description.trim() && !content.trim()) || loading)}
           activeOpacity={0.7}
         >
           <Text style={styles.submitButtonText}>
@@ -226,7 +214,7 @@ export default function CreatePostScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',
   },
   header: {
     flexDirection: 'row',
@@ -236,7 +224,7 @@ const styles = StyleSheet.create({
     paddingTop: 50,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F5F5F5',
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
   },
   backButton: {
     padding: 8,
@@ -244,7 +232,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#000',
+    color: '#FFF',
   },
   placeholder: {
     width: 40,
@@ -260,7 +248,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 8,
     padding: 16,
     marginBottom: 8,
@@ -268,11 +257,11 @@ const styles = StyleSheet.create({
   },
   addButtonText: {
     fontSize: 15,
-    color: '#333',
+    color: '#FFF',
   },
   hintText: {
     fontSize: 13,
-    color: '#666',
+    color: '#E0E0E0',
     marginBottom: 16,
     marginLeft: 4,
   },
@@ -300,16 +289,17 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#000',
+    color: '#FFF',
     marginBottom: 12,
   },
   textArea: {
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 8,
     padding: 16,
     fontSize: 15,
-    color: '#333',
+    color: '#FFF',
     minHeight: 100,
     textAlignVertical: 'top',
   },
@@ -318,29 +308,26 @@ const styles = StyleSheet.create({
   },
   characterCount: {
     fontSize: 12,
-    color: '#999',
+    color: '#E0E0E0',
     textAlign: 'right',
     marginTop: 8,
   },
   footer: {
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: '#F5F5F5',
-    backgroundColor: '#fff',
+    borderTopColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'transparent',
   },
   submitButton: {
-    backgroundColor: '#1976D2',
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
     borderRadius: 8,
     paddingVertical: 16,
     alignItems: 'center',
-    shadowColor: '#1976D2',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
   },
   submitButtonDisabled: {
-    backgroundColor: '#ccc',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     shadowOpacity: 0,
     elevation: 0,
   },
@@ -350,4 +337,3 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
 });
-

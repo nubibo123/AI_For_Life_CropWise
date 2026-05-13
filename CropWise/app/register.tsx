@@ -7,11 +7,11 @@ import {
   Platform,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
+import GlassInput from '../components/ui/GlassInput';
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -44,13 +44,9 @@ export default function RegisterScreen() {
       setSuccessMessage('');
       await register(name.trim(), email.trim(), password);
       
-      // Đăng xuất sau khi đăng ký thành công để user phải đăng nhập lại
       await logout();
-      
-      // Hiển thị thông báo thành công và chuyển về trang đăng nhập
       setSuccessMessage('Đăng ký thành công! Vui lòng đăng nhập với tài khoản vừa tạo.');
       
-      // Chuyển về trang đăng nhập sau 1.5 giây
       setTimeout(() => {
         router.replace('/login');
       }, 1500);
@@ -83,85 +79,68 @@ export default function RegisterScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
       <View style={styles.content}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-            <Ionicons name="chevron-back" size={26} color="#333" />
+            <Ionicons name="chevron-back" size={26} color="#FFF" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Đăng ký</Text>
           <View style={{ width: 26 }} />
         </View>
 
         <View style={styles.form}>
-          <View style={styles.inputContainer}>
-            <Ionicons name="person-outline" size={20} color="#999" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Họ và tên"
-              placeholderTextColor="#999"
-              value={name}
-              onChangeText={(text) => {
-                setName(text);
-                if (errorMessage) setErrorMessage('');
-              }}
-              autoCapitalize="words"
-            />
-          </View>
+          <GlassInput
+            icon="person-outline"
+            placeholder="Họ và tên"
+            value={name}
+            onChangeText={(text) => {
+              setName(text);
+              if (errorMessage) setErrorMessage('');
+            }}
+            autoCapitalize="words"
+          />
 
-          <View style={styles.inputContainer}>
-            <Ionicons name="mail-outline" size={20} color="#999" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              placeholderTextColor="#999"
-              value={email}
-              onChangeText={(text) => {
-                setEmail(text);
-                if (errorMessage) setErrorMessage('');
-              }}
-              autoCapitalize="none"
-              keyboardType="email-address"
-              autoComplete="email"
-            />
-          </View>
+          <GlassInput
+            icon="mail-outline"
+            placeholder="Email"
+            value={email}
+            onChangeText={(text) => {
+              setEmail(text);
+              if (errorMessage) setErrorMessage('');
+            }}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            autoComplete="email"
+          />
 
-          <View style={styles.inputContainer}>
-            <Ionicons name="lock-closed-outline" size={20} color="#999" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Mật khẩu"
-              placeholderTextColor="#999"
-              value={password}
-              onChangeText={(text) => {
-                setPassword(text);
-                if (errorMessage) setErrorMessage('');
-              }}
-              secureTextEntry={!showPassword}
-              autoCapitalize="none"
-              autoComplete="password-new"
-            />
-            <TouchableOpacity style={styles.eyeIcon} onPress={() => setShowPassword(!showPassword)}>
-              <Ionicons name={showPassword ? 'eye-outline' : 'eye-off-outline'} size={20} color="#999" />
-            </TouchableOpacity>
-          </View>
+          <GlassInput
+            icon="lock-closed-outline"
+            placeholder="Mật khẩu"
+            value={password}
+            onChangeText={(text) => {
+              setPassword(text);
+              if (errorMessage) setErrorMessage('');
+            }}
+            secureTextEntry={!showPassword}
+            autoCapitalize="none"
+            autoComplete="password-new"
+            rightIcon={showPassword ? 'eye-outline' : 'eye-off-outline'}
+            onRightIconPress={() => setShowPassword(!showPassword)}
+          />
 
-          <View style={styles.inputContainer}>
-            <Ionicons name="lock-closed-outline" size={20} color="#999" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Xác nhận mật khẩu"
-              placeholderTextColor="#999"
-              value={confirmPassword}
-              onChangeText={(text) => {
-                setConfirmPassword(text);
-                if (errorMessage) setErrorMessage('');
-              }}
-              secureTextEntry={!showPassword}
-              autoCapitalize="none"
-              autoComplete="password-new"
-            />
-          </View>
+          <GlassInput
+            icon="lock-closed-outline"
+            placeholder="Xác nhận mật khẩu"
+            value={confirmPassword}
+            onChangeText={(text) => {
+              setConfirmPassword(text);
+              if (errorMessage) setErrorMessage('');
+            }}
+            secureTextEntry={!showPassword}
+            autoCapitalize="none"
+            autoComplete="password-new"
+          />
 
           {errorMessage ? (
             <View style={styles.errorContainer}>
@@ -205,7 +184,7 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',
   },
   content: {
     flex: 1,
@@ -224,49 +203,23 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#333',
+    color: '#FFF',
   },
   form: {
     width: '100%',
   },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F5F5F5',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-  },
-  inputIcon: {
-    marginRight: 12,
-  },
-  input: {
-    flex: 1,
-    fontSize: 16,
-    color: '#333',
-  },
-  eyeIcon: {
-    padding: 4,
-  },
   registerButton: {
-    backgroundColor: '#2E7D32',
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
     marginBottom: 24,
-    shadowColor: '#2E7D32',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
   },
   registerButtonDisabled: {
-    backgroundColor: '#ccc',
-    shadowOpacity: 0,
-    elevation: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   registerButtonText: {
     fontSize: 16,
@@ -280,15 +233,15 @@ const styles = StyleSheet.create({
   },
   signInText: {
     fontSize: 14,
-    color: '#666',
+    color: '#E0E0E0',
   },
   signInLink: {
     fontSize: 14,
-    color: '#1976D2',
+    color: '#FFF',
     fontWeight: '600',
   },
   errorContainer: {
-    backgroundColor: '#fdecea',
+    backgroundColor: 'rgba(253, 236, 234, 0.9)',
     borderRadius: 10,
     padding: 12,
     marginBottom: 16,
@@ -300,7 +253,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   successContainer: {
-    backgroundColor: '#e6f4ea',
+    backgroundColor: 'rgba(230, 244, 234, 0.9)',
     borderRadius: 10,
     padding: 12,
     marginBottom: 16,
@@ -312,5 +265,3 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 });
-
-

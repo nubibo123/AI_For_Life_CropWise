@@ -278,7 +278,7 @@ export default function DiseaseDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: 'transparent',
   },
   imageContainer: {
     height: 280,
@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   section: {
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
@@ -383,7 +383,7 @@ const styles = StyleSheet.create({
   },
   halfSection: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 16,
     padding: 16,
     shadowColor: '#000',
@@ -401,11 +401,11 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#000',
+    color: '#FFF',
   },
   description: {
     fontSize: 15,
-    color: '#666',
+    color: '#E0E0E0',
     lineHeight: 24,
   },
   listItem: {
@@ -424,7 +424,7 @@ const styles = StyleSheet.create({
   },
   listText: {
     fontSize: 15,
-    color: '#333',
+    color: '#FFF',
     lineHeight: 22,
     flex: 1,
   },
@@ -449,10 +449,10 @@ const styles = StyleSheet.create({
   tabText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#999',
+    color: 'rgba(255,255,255,0.6)',
   },
   activeTabText: {
-    color: '#000',
+    color: '#FFF',
   },
   tabDivider: {
     width: 1,
@@ -470,7 +470,7 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#666',
+    color: '#E0E0E0',
     marginTop: 16,
     marginBottom: 24,
   },

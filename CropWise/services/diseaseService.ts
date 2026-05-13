@@ -1,14 +1,9 @@
-// Service để gọi API phân loại bệnh cây ngô
-
-// THAY ĐỔI URL NÀY SAU KHI DEPLOY LÊN RENDER
-//const API_URL = 'https://nubibo-cropwise-api.hf.space'; // Thay bằng URL từ Render
-
 // ---- LOCAL DEVELOPMENT (comment lại khi đã deploy) ----
 // const API_URL = 'http://192.168.0.106:8001'; // Cho Expo Go trên điện thoại/emulator
 // const API_URL = 'http://10.0.2.2:8001'; // Cho Android emulator (không dùng Expo Go)
 // const API_URL = 'http://localhost:8001'; // Cho web
 
-const API_URL = 'https://indexless-lilyana-subprofessionally.ngrok-free.dev';
+const API_URL = 'https://25a0-35-252-244-105.ngrok-free.app';
 export interface DiseaseInfo {
   name: string;
   description: string;
@@ -51,11 +46,11 @@ export const predictDisease = async (imageUri: string): Promise<PredictionResult
 
     // Tạo FormData để upload ảnh
     const formData = new FormData();
-    
+
     // Lấy tên file từ URI
     const uriParts = imageUri.split('/');
     const filename = uriParts[uriParts.length - 1];
-    
+
     // Xác định type từ extension
     let type = 'image/jpeg';
     if (filename.endsWith('.png')) type = 'image/png';
@@ -106,7 +101,7 @@ export const predictDisease = async (imageUri: string): Promise<PredictionResult
     // Xử lý các error codes từ API
     if (!result.success) {
       console.warn('⚠️ Prediction không thành công:', result.error_code);
-      
+
       if (result.error_code === 'NO_LEAF_DETECTED') {
         console.warn('🍃 Không phát hiện lá nào trong ảnh');
         console.warn('💡 Gợi ý:', result.suggestion);
@@ -142,7 +137,7 @@ export const predictDisease = async (imageUri: string): Promise<PredictionResult
 export const checkAPIStatus = async (): Promise<boolean> => {
   try {
     console.log('🔍 Đang kiểm tra API status tại:', `${API_URL}/`);
-    
+
     const response = await fetch(`${API_URL}/`, {
       method: 'GET',
       headers: {
@@ -150,11 +145,11 @@ export const checkAPIStatus = async (): Promise<boolean> => {
         'ngrok-skip-browser-warning': 'true', // Bỏ qua ngrok warning page
       },
     });
-    
+
     console.log('📥 Response status:', response.status);
     console.log('📥 Response ok:', response.ok);
     console.log('📥 Content-Type:', response.headers.get('content-type'));
-    
+
     // Kiểm tra content-type trước khi parse JSON
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
@@ -162,7 +157,7 @@ export const checkAPIStatus = async (): Promise<boolean> => {
       console.error('❌ API trả về không phải JSON:');
       console.error('Content-Type:', contentType);
       console.error('Response preview:', text.substring(0, 200));
-      
+
       // Kiểm tra nếu là ngrok warning page
       if (text.includes('ngrok') || text.includes('Tunnel') || text.includes('<!DOCTYPE')) {
         console.error('⚠️ Có vẻ đây là ngrok warning page!');
@@ -170,15 +165,15 @@ export const checkAPIStatus = async (): Promise<boolean> => {
         console.error('   1. Thêm header "ngrok-skip-browser-warning: true"');
         console.error('   2. Hoặc truy cập URL trong browser 1 lần để verify');
       }
-      
+
       return false;
     }
-    
+
     const data = await response.json();
     console.log('✅ API Status:', data);
     console.log('✅ API version:', data.version);
     console.log('✅ Models:', data.models);
-    
+
     return response.ok;
   } catch (error) {
     console.error('❌ API không khả dụng:', error);
@@ -187,11 +182,11 @@ export const checkAPIStatus = async (): Promise<boolean> => {
     console.error('   1. Server đã chạy chưa?');
     console.error('   2. URL ngrok đúng chưa?');
     console.error('   3. Ngrok session còn active không?');
-    
+
     if (error instanceof SyntaxError) {
       console.error('⚠️ Lỗi parse JSON - API có thể trả về HTML thay vì JSON');
     }
-    
+
     return false;
   }
 };
@@ -240,13 +235,13 @@ export const predictDiseasesBatch = async (imageUris: string[]): Promise<BatchRe
     console.log('🌐 API URL:', `${API_URL}/predict-batch`);
 
     const formData = new FormData();
-    
+
     // Thêm tất cả ảnh vào FormData
     for (let i = 0; i < imageUris.length; i++) {
       const imageUri = imageUris[i];
       const uriParts = imageUri.split('/');
       const filename = uriParts[uriParts.length - 1] || `image_${i}.jpg`;
-      
+
       let type = 'image/jpeg';
       if (filename.endsWith('.png')) type = 'image/png';
       else if (filename.endsWith('.jpg') || filename.endsWith('.jpeg')) type = 'image/jpeg';
@@ -289,13 +284,13 @@ export const predictDiseasesBatch = async (imageUris: string[]): Promise<BatchRe
     }
 
     const result: BatchResponse = await apiResponse.json();
-    
+
     // Thêm imageUri vào mỗi result để hiển thị
     result.results = result.results.map((r, idx) => ({
       ...r,
       imageUri: imageUris[idx]
     }));
-    
+
     console.log('✅ Batch prediction result:', result);
 
     return result;

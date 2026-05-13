@@ -1,6 +1,22 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Users collection
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Fields collection
+    match /fields/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Outbreaks collection
+    match /outbreaks/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+
     // Posts collection
     match /posts/{postId} {
       allow read: if true;
@@ -52,10 +68,11 @@ service cloud.firestore {
 
       // Votes subcollection cho post
       match /votes/{userId} {
-        allow read, write: if request.auth != null
-                           && request.auth.uid == userId
-                           && request.resource.data.keys().hasOnly(['value'])
-                           && (request.resource.data.value in [-1, 0, 1]);
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow write: if request.auth != null
+                     && request.auth.uid == userId
+                     && request.resource.data.keys().hasOnly(['value'])
+                     && (request.resource.data.value in [-1, 0, 1]);
       }
 
       // Comments subcollection
@@ -137,4 +154,3 @@ service cloud.firestore {
     }
   }
 }
-

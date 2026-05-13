@@ -1,9 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
+import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
-import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -16,7 +16,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
-import { checkAPIStatus, predictDisease, predictDiseasesBatch, PredictionResult, BatchResponse } from '../../services/diseaseService';
+import { BatchResponse, checkAPIStatus, predictDisease, PredictionResult } from '../../services/diseaseService';
 import { getDiseaseIdByApiName } from '../../services/maizeDiseases';
 import { getWeatherByCoords, WeatherData } from '../../services/weatherService';
 
@@ -50,7 +50,7 @@ export default function HomeScreen() {
     try {
       const { status } = await Location.getForegroundPermissionsAsync();
       setLocationGranted(status === 'granted');
-      
+
       // Nếu đã có quyền, tự động lấy thời tiết
       if (status === 'granted') {
         fetchWeather();
@@ -63,7 +63,7 @@ export default function HomeScreen() {
   const fetchWeather = async () => {
     try {
       setLoading(true);
-      
+
       // Kiểm tra quyền truy cập trước
       const { status } = await Location.getForegroundPermissionsAsync();
       if (status !== 'granted') {
@@ -72,20 +72,20 @@ export default function HomeScreen() {
         setLoading(false);
         return;
       }
-      
+
       const location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
       });
-      
+
       console.log('Location:', location.coords);
-      
+
       // Lưu thông tin vị trí
       setCurrentLocation({
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
         accuracy: location.coords.accuracy,
       });
-      
+
       const weatherData = await getWeatherByCoords(
         location.coords.latitude,
         location.coords.longitude
@@ -100,7 +100,7 @@ export default function HomeScreen() {
       }
     } catch (error: any) {
       console.error('Error fetching weather:', error);
-      
+
       // Xử lý các loại lỗi cụ thể
       if (error.message?.includes('location') || error.message?.includes('Location')) {
         alert('📍 Không thể lấy vị trí.\n\nVui lòng:\n• Bật dịch vụ định vị trên thiết bị\n• Cho phép ứng dụng truy cập vị trí\n• Thử lại sau');
@@ -117,7 +117,7 @@ export default function HomeScreen() {
     try {
       setLoading(true);
       const { status } = await Location.requestForegroundPermissionsAsync();
-      
+
       if (status !== 'granted') {
         alert('⚠️ Quyền truy cập vị trí bị từ chối\n\nĐể xem thông tin thời tiết, vui lòng:\n1. Vào Cài đặt thiết bị\n2. Tìm ứng dụng CropWise\n3. Bật quyền "Vị trí"');
         setLoading(false);
@@ -137,19 +137,19 @@ export default function HomeScreen() {
   const preprocessImage = async (imageUri: string): Promise<string> => {
     try {
       console.log('🔧 Đang tiền xử lý ảnh...');
-      
+
       const manipResult = await ImageManipulator.manipulateAsync(
         imageUri,
         [
           // Resize về kích thước tối ưu (256x256 như model)
           { resize: { width: 256, height: 256 } }
         ],
-        { 
+        {
           compress: 0.9, // Giảm dung lượng nhưng giữ chất lượng
-          format: ImageManipulator.SaveFormat.JPEG 
+          format: ImageManipulator.SaveFormat.JPEG
         }
       );
-      
+
       console.log('✅ Tiền xử lý hoàn tất');
       return manipResult.uri;
     } catch (error) {
@@ -231,7 +231,7 @@ export default function HomeScreen() {
       setPredicting(true);
       setShowBatchModal(true); // Mở modal ngay
       setBatchResults({ success: true, processed: 0, failed: 0, total: imageUris.length, results: [] }); // Khởi tạo empty
-      
+
       console.log('🔍 Đang phân tích', imageUris.length, 'ảnh...');
 
       // Kiểm tra API có sẵn không
@@ -251,9 +251,9 @@ export default function HomeScreen() {
       for (let i = 0; i < imageUris.length; i++) {
         try {
           console.log(`🔍 Đang phân tích ảnh ${i + 1}/${imageUris.length}...`);
-          
+
           const result = await predictDisease(imageUris[i]);
-          
+
           if (result && result.success) {
             console.log(`📦 Ảnh ${i + 1} - leaf_bbox:`, result.leaf_bbox);
             allResults.push({
@@ -277,7 +277,7 @@ export default function HomeScreen() {
             });
             failed++;
           }
-          
+
           // Cập nhật kết quả ngay sau mỗi ảnh
           setBatchResults({
             success: true,
@@ -286,7 +286,7 @@ export default function HomeScreen() {
             total: imageUris.length,
             results: [...allResults]
           });
-          
+
         } catch (error) {
           console.error(`Error analyzing image ${i + 1}:`, error);
           allResults.push({
@@ -296,7 +296,7 @@ export default function HomeScreen() {
             imageUri: imageUris[i]
           });
           failed++;
-          
+
           // Cập nhật kết quả kể cả khi lỗi
           setBatchResults({
             success: true,
@@ -309,7 +309,7 @@ export default function HomeScreen() {
       }
 
       console.log('✅ Phân tích hoàn tất:', processed, 'thành công,', failed, 'thất bại');
-      
+
     } catch (error) {
       console.error('❌ Lỗi khi phân tích nhiều ảnh:', error);
       alert('Lỗi khi phân tích: ' + error);
@@ -338,10 +338,10 @@ export default function HomeScreen() {
       if (result && result.success) {
         setPredictionResult(result);
         setShowResultModal(true);
-        console.log('✅ Phân tích thành công:', result.predicted_class_vi);
-        console.log('📦 Bounding box data:', result.leaf_bbox);
+        console.log('Phân tích thành công:', result.predicted_class_vi);
+        console.log(' Bounding box data:', result.leaf_bbox);
       } else {
-        alert('❌ Không thể phân tích ảnh. Vui lòng thử lại!');
+        alert(' Không thể phân tích ảnh. Vui lòng thử lại!');
       }
     } catch (error) {
       console.error('Error analyzing disease:', error);
@@ -354,17 +354,17 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <StatusBar style="dark" />
-      
+
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>CropWise</Text>
         <View style={{ flexDirection: 'row', gap: 15 }}>
           {locationGranted && (
             <TouchableOpacity onPress={fetchWeather} disabled={loading}>
-              <Ionicons 
-                name="refresh" 
-                size={24} 
-                color={loading ? "#ccc" : "#333"} 
+              <Ionicons
+                name="refresh"
+                size={24}
+                color={loading ? "#ccc" : "#333"}
               />
             </TouchableOpacity>
           )}
@@ -408,7 +408,7 @@ export default function HomeScreen() {
             <View style={styles.weatherErrorContainer}>
               <Ionicons name="cloud-offline-outline" size={50} color="#F9A825" />
               <Text style={styles.weatherErrorTitle}>Không thể tải thời tiết</Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.weatherRetryButton}
                 onPress={fetchWeather}
               >
@@ -442,7 +442,7 @@ export default function HomeScreen() {
                 <Text style={styles.locationSubtitle}>Để xem thời tiết và dự báo chính xác</Text>
               </View>
             </View>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.locationButton, loading && styles.locationButtonDisabled]}
               onPress={requestLocationAndFetchWeather}
               disabled={loading}
@@ -466,7 +466,7 @@ export default function HomeScreen() {
           <View style={styles.processContainer}>
             <View style={styles.processStep}>
               <View style={styles.processIcon}>
-                <Ionicons name="leaf" size={40} color="#2C5F2D" />
+                <Ionicons name="leaf" size={40} color="#4CAF50" />
               </View>
               <Text style={styles.processLabel}>Chụp ảnh</Text>
             </View>
@@ -519,34 +519,34 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          <TouchableOpacity 
-            style={styles.captureButton} 
+          <TouchableOpacity
+            style={styles.captureButton}
             onPress={pickImage}
             disabled={predicting}
           >
-            <Ionicons name="camera" size={20} color="#fff" style={{ marginRight: 8 }} />
+            <Ionicons name="camera" size={24} color="#fff" style={{ marginRight: 8 }} />
             <Text style={styles.captureButtonText}>
-              {predicting ? 'Đang phân tích...' : 'Chụp ảnh'}
+              Chụp ảnh bệnh
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={[styles.captureButton, styles.galleryButton]} 
+          <TouchableOpacity
+            style={[styles.captureButton, styles.galleryButton]}
             onPress={pickImageFromGallery}
             disabled={predicting}
           >
-            <Ionicons name="images" size={20} color="#2C5F2D" style={{ marginRight: 8 }} />
-            <Text style={[styles.captureButtonText, styles.galleryButtonText]}>
-              {predicting ? 'Đang phân tích...' : 'Chọn từ thư viện'}
+            <Ionicons name="images" size={24} color="#fff" style={{ marginRight: 8 }} />
+            <Text style={[styles.captureButtonText]}>
+              Chọn từ thư viện
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={[styles.captureButton, styles.batchButton]} 
+          <TouchableOpacity
+            style={[styles.captureButton, styles.batchButton]}
             onPress={pickMultipleImages}
             disabled={predicting}
           >
-            <Ionicons name="albums" size={20} color="#FF9800" style={{ marginRight: 8 }} />
+            <Ionicons name="albums" size={24} color="#fff" style={{ marginRight: 8 }} />
             <Text style={[styles.captureButtonText, styles.batchButtonText]}>
               {predicting ? 'Đang phân tích...' : 'Chọn nhiều ảnh'}
             </Text>
@@ -554,19 +554,19 @@ export default function HomeScreen() {
         </View>
 
         {/* Feature Cards */}
-          <View style={styles.featuresContainer}>
-        <TouchableOpacity 
-          style={styles.featureCard} 
-          onPress={() => router.push('/fertilizer')} // ← chuyển sang màn hình fertilizer.tsx
-        >
-          <View style={styles.featureIconContainer}>
-            <Ionicons name="calculator" size={28} color="#333" />
-          </View>
-          <Text style={styles.featureText}>Tính toán phân bón</Text>
-          <Ionicons name="chevron-forward" size={24} color="#666" />
-        </TouchableOpacity>
+        <View style={styles.featuresContainer}>
+          <TouchableOpacity
+            style={styles.featureCard}
+            onPress={() => router.push('/fertilizer')} // ← chuyển sang màn hình fertilizer.tsx
+          >
+            <View style={styles.featureIconContainer}>
+              <Ionicons name="calculator" size={28} color="#333" />
+            </View>
+            <Text style={styles.featureText}>Tính toán phân bón</Text>
+            <Ionicons name="chevron-forward" size={24} color="#666" />
+          </TouchableOpacity>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.featureCard}
             onPress={() => router.push('/diseases' as any)}
           >
@@ -604,14 +604,14 @@ export default function HomeScreen() {
               <ScrollView style={styles.modalBody}>
                 {/* Ảnh đã phân tích */}
                 {selectedImage && (
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     onPress={() => {
                       console.log('🔍 Opening zoom modal...');
                       console.log('📦 predictionResult.leaf_bbox:', predictionResult.leaf_bbox);
                       console.log('🖼️ selectedImage:', selectedImage);
-                      const zoomData = { 
-                        uri: selectedImage, 
-                        bbox: predictionResult.leaf_bbox 
+                      const zoomData = {
+                        uri: selectedImage,
+                        bbox: predictionResult.leaf_bbox
                       };
                       console.log('✅ Setting zoomedImage to:', zoomData);
                       setZoomedImage(zoomData);
@@ -636,27 +636,27 @@ export default function HomeScreen() {
                   predictionResult.predicted_class === 'Healthy' ? styles.healthyCard : styles.diseaseCard
                 ]}>
                   <View style={styles.resultHeader}>
-                    <Ionicons 
-                      name={predictionResult.predicted_class === 'Healthy' ? 'checkmark-circle' : 'warning'} 
-                      size={32} 
-                      color={predictionResult.predicted_class === 'Healthy' ? '#4CAF50' : '#FF6B35'} 
+                    <Ionicons
+                      name={predictionResult.predicted_class === 'Healthy' ? 'checkmark-circle' : 'warning'}
+                      size={32}
+                      color={predictionResult.predicted_class === 'Healthy' ? '#4CAF50' : '#FF6B35'}
                     />
                     <View style={styles.resultHeaderText}>
                       <Text style={styles.resultLabel}>Chẩn đoán:</Text>
                       <Text style={styles.resultDiseaseName}>{predictionResult.disease_info?.name}</Text>
                     </View>
                   </View>
-                  
+
                   <View style={styles.confidenceBar}>
                     <Text style={styles.confidenceLabel}>Độ tin cậy:</Text>
                     <Text style={styles.confidenceValue}>{predictionResult.confidence?.toFixed(1)}%</Text>
                   </View>
                   <View style={styles.progressBar}>
-                    <View 
+                    <View
                       style={[
-                        styles.progressFill, 
+                        styles.progressFill,
                         { width: `${predictionResult.confidence || 0}%` }
-                      ]} 
+                      ]}
                     />
                   </View>
                 </View>
@@ -675,7 +675,7 @@ export default function HomeScreen() {
 
                 {/* Nút xem chi tiết điều trị - chỉ hiện nếu bệnh có trong database */}
                 {predictionResult.predicted_class !== 'Healthy' && predictionResult.predicted_class_vi && getDiseaseIdByApiName(predictionResult.predicted_class_vi) && (
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.detailButton}
                     onPress={() => {
                       const diseaseId = predictionResult.predicted_class_vi && getDiseaseIdByApiName(predictionResult.predicted_class_vi);
@@ -701,7 +701,7 @@ export default function HomeScreen() {
                   ))}
                 </View>
 
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.closeButton}
                   onPress={() => setShowResultModal(false)}
                 >
@@ -721,122 +721,122 @@ export default function HomeScreen() {
         onRequestClose={() => setShowImageZoom(false)}
       >
         <View style={styles.zoomOverlay}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.zoomCloseButton}
             onPress={() => setShowImageZoom(false)}
           >
             <Ionicons name="close-circle" size={40} color="#fff" />
           </TouchableOpacity>
-          
+
           {zoomedImage && (() => {
             console.log('🎯 In Modal - zoomedImage:', zoomedImage);
             console.log('🎯 In Modal - zoomedImage.bbox:', zoomedImage.bbox);
             console.log('🎯 In Modal - typeof bbox:', typeof zoomedImage.bbox);
             console.log('🎯 In Modal - Array.isArray(bbox):', Array.isArray(zoomedImage.bbox));
-            
+
             return (
-            <View style={styles.zoomImageContainer}>
-              <View 
-                style={{ width: '100%', height: '100%', position: 'relative', justifyContent: 'center', alignItems: 'center' }}
-                onLayout={(e) => {
-                  const { width: layoutWidth, height: layoutHeight } = e.nativeEvent.layout;
-                  // Tính kích thước ảnh khi contain (assume ảnh vuông 256x256)
-                  const imageSize = Math.min(layoutWidth, layoutHeight);
-                  setImageLayout({ width: imageSize, height: imageSize });
-                }}
-              >
-                <View style={{ width: imageLayout?.width || '100%', height: imageLayout?.height || '100%', position: 'relative' }}>
-                  <Image 
-                    source={{ uri: zoomedImage.uri }} 
-                    style={{ width: '100%', height: '100%' }}
-                    resizeMode="contain"
-                  />
-                  
-                  {/* Vẽ bounding box trên ảnh */}
-                  {zoomedImage.bbox && Array.isArray(zoomedImage.bbox) && zoomedImage.bbox.length === 4 && imageLayout && (() => {
-                    const [x1, y1, x2, y2] = zoomedImage.bbox;
-                    const bboxWidth = x2 - x1;
-                    const bboxHeight = y2 - y1;
-                    
-                    // Ảnh gốc là 256x256 (model size)
-                    const originalSize = 256;
-                    const scale = imageLayout.width / originalSize;
-                    
-                    // Tính vị trí scaled
-                    const scaledX = x1 * scale;
-                    const scaledY = y1 * scale;
-                    const scaledWidth = bboxWidth * scale;
-                    const scaledHeight = bboxHeight * scale;
-                    
-                    console.log('🎨 Drawing bbox:', { 
-                      original: { x1, y1, x2, y2 },
-                      layout: imageLayout,
-                      scale, 
-                      scaled: { x: scaledX, y: scaledY, width: scaledWidth, height: scaledHeight }
-                    });
-                    
-                    return (
-                      <View 
-                        style={{
-                          position: 'absolute',
-                          left: scaledX,
-                          top: scaledY,
-                          width: scaledWidth,
-                          height: scaledHeight,
-                          borderWidth: 4,
-                          borderColor: '#4CAF50',
-                          backgroundColor: 'rgba(76, 175, 80, 0.15)',
-                        }}
-                      >
-                        {/* Label góc trên */}
-                        <View style={{
-                          position: 'absolute',
-                          top: -32,
-                          left: -2,
-                          backgroundColor: '#4CAF50',
-                          paddingHorizontal: 12,
-                          paddingVertical: 6,
-                          borderRadius: 8,
-                          shadowColor: '#000',
-                          shadowOffset: { width: 0, height: 2 },
-                          shadowOpacity: 0.3,
-                          shadowRadius: 4,
-                          elevation: 5,
-                        }}>
-                          <Text style={{ color: '#fff', fontSize: 13, fontWeight: 'bold' }}>
-                            🍃 Lá phát hiện
-                          </Text>
+              <View style={styles.zoomImageContainer}>
+                <View
+                  style={{ width: '100%', height: '100%', position: 'relative', justifyContent: 'center', alignItems: 'center' }}
+                  onLayout={(e) => {
+                    const { width: layoutWidth, height: layoutHeight } = e.nativeEvent.layout;
+                    // Tính kích thước ảnh khi contain (assume ảnh vuông 256x256)
+                    const imageSize = Math.min(layoutWidth, layoutHeight);
+                    setImageLayout({ width: imageSize, height: imageSize });
+                  }}
+                >
+                  <View style={{ width: imageLayout?.width || '100%', height: imageLayout?.height || '100%', position: 'relative' }}>
+                    <Image
+                      source={{ uri: zoomedImage.uri }}
+                      style={{ width: '100%', height: '100%' }}
+                      resizeMode="contain"
+                    />
+
+                    {/* Vẽ bounding box trên ảnh */}
+                    {zoomedImage.bbox && Array.isArray(zoomedImage.bbox) && zoomedImage.bbox.length === 4 && imageLayout && (() => {
+                      const [x1, y1, x2, y2] = zoomedImage.bbox;
+                      const bboxWidth = x2 - x1;
+                      const bboxHeight = y2 - y1;
+
+                      // Ảnh gốc là 256x256 (model size)
+                      const originalSize = 256;
+                      const scale = imageLayout.width / originalSize;
+
+                      // Tính vị trí scaled
+                      const scaledX = x1 * scale;
+                      const scaledY = y1 * scale;
+                      const scaledWidth = bboxWidth * scale;
+                      const scaledHeight = bboxHeight * scale;
+
+                      console.log('🎨 Drawing bbox:', {
+                        original: { x1, y1, x2, y2 },
+                        layout: imageLayout,
+                        scale,
+                        scaled: { x: scaledX, y: scaledY, width: scaledWidth, height: scaledHeight }
+                      });
+
+                      return (
+                        <View
+                          style={{
+                            position: 'absolute',
+                            left: scaledX,
+                            top: scaledY,
+                            width: scaledWidth,
+                            height: scaledHeight,
+                            borderWidth: 4,
+                            borderColor: '#4CAF50',
+                            backgroundColor: 'rgba(76, 175, 80, 0.15)',
+                          }}
+                        >
+                          {/* Label góc trên */}
+                          <View style={{
+                            position: 'absolute',
+                            top: -32,
+                            left: -2,
+                            backgroundColor: '#4CAF50',
+                            paddingHorizontal: 12,
+                            paddingVertical: 6,
+                            borderRadius: 8,
+                            shadowColor: '#000',
+                            shadowOffset: { width: 0, height: 2 },
+                            shadowOpacity: 0.3,
+                            shadowRadius: 4,
+                            elevation: 5,
+                          }}>
+                            <Text style={{ color: '#fff', fontSize: 13, fontWeight: 'bold' }}>
+                              🍃 Lá phát hiện
+                            </Text>
+                          </View>
+
+                          {/* Corner markers */}
+                          <View style={{ position: 'absolute', top: -2, left: -2, width: 20, height: 20, borderTopWidth: 4, borderLeftWidth: 4, borderColor: '#4CAF50' }} />
+                          <View style={{ position: 'absolute', top: -2, right: -2, width: 20, height: 20, borderTopWidth: 4, borderRightWidth: 4, borderColor: '#4CAF50' }} />
+                          <View style={{ position: 'absolute', bottom: -2, left: -2, width: 20, height: 20, borderBottomWidth: 4, borderLeftWidth: 4, borderColor: '#4CAF50' }} />
+                          <View style={{ position: 'absolute', bottom: -2, right: -2, width: 20, height: 20, borderBottomWidth: 4, borderRightWidth: 4, borderColor: '#4CAF50' }} />
                         </View>
-                        
-                        {/* Corner markers */}
-                        <View style={{ position: 'absolute', top: -2, left: -2, width: 20, height: 20, borderTopWidth: 4, borderLeftWidth: 4, borderColor: '#4CAF50' }} />
-                        <View style={{ position: 'absolute', top: -2, right: -2, width: 20, height: 20, borderTopWidth: 4, borderRightWidth: 4, borderColor: '#4CAF50' }} />
-                        <View style={{ position: 'absolute', bottom: -2, left: -2, width: 20, height: 20, borderBottomWidth: 4, borderLeftWidth: 4, borderColor: '#4CAF50' }} />
-                        <View style={{ position: 'absolute', bottom: -2, right: -2, width: 20, height: 20, borderBottomWidth: 4, borderRightWidth: 4, borderColor: '#4CAF50' }} />
-                      </View>
-                    );
-                  })()}
-                </View>
-              </View>
-              
-              {/* Thông tin bbox rút gọn */}
-              {zoomedImage.bbox && Array.isArray(zoomedImage.bbox) && zoomedImage.bbox.length === 4 ? (
-                <View style={styles.bboxInfo}>
-                  <View style={styles.bboxInfoHeader}>
-                    <Ionicons name="scan" size={20} color="#4CAF50" />
-                    <Text style={styles.bboxInfoTitle}>Vùng lá: {Math.round(zoomedImage.bbox[2] - zoomedImage.bbox[0])}×{Math.round(zoomedImage.bbox[3] - zoomedImage.bbox[1])} px</Text>
+                      );
+                    })()}
                   </View>
                 </View>
-              ) : (
-                <View style={styles.bboxInfo}>
-                  <Text style={styles.bboxInfoSubtext}>Không phát hiện vùng lá</Text>
-                </View>
-              )}
-            </View>
+
+                {/* Thông tin bbox rút gọn */}
+                {zoomedImage.bbox && Array.isArray(zoomedImage.bbox) && zoomedImage.bbox.length === 4 ? (
+                  <View style={styles.bboxInfo}>
+                    <View style={styles.bboxInfoHeader}>
+                      <Ionicons name="scan" size={20} color="#4CAF50" />
+                      <Text style={styles.bboxInfoTitle}>Vùng lá: {Math.round(zoomedImage.bbox[2] - zoomedImage.bbox[0])}×{Math.round(zoomedImage.bbox[3] - zoomedImage.bbox[1])} px</Text>
+                    </View>
+                  </View>
+                ) : (
+                  <View style={styles.bboxInfo}>
+                    <Text style={styles.bboxInfoSubtext}>Không phát hiện vùng lá</Text>
+                  </View>
+                )}
+              </View>
             );
           })()}
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={styles.zoomDoneButton}
             onPress={() => setShowImageZoom(false)}
           >
@@ -850,7 +850,7 @@ export default function HomeScreen() {
         animationType="fade"
         transparent={true}
         visible={predicting && !showBatchModal}
-        onRequestClose={() => {}}
+        onRequestClose={() => { }}
       >
         <View style={styles.loadingOverlay}>
           <View style={styles.singleLoadingContent}>
@@ -926,9 +926,9 @@ export default function HomeScreen() {
                         onPress={() => {
                           console.log('🔍 Batch - Opening zoom for image', index + 1);
                           console.log('📦 Batch - result.leaf_bbox:', result.leaf_bbox);
-                          setZoomedImage({ 
-                            uri: result.imageUri!, 
-                            bbox: result.leaf_bbox 
+                          setZoomedImage({
+                            uri: result.imageUri!,
+                            bbox: result.leaf_bbox
                           });
                           setShowImageZoom(true);
                         }}
@@ -944,23 +944,23 @@ export default function HomeScreen() {
                         </View>
                       </TouchableOpacity>
                     )}
-                    
+
                     {result.success ? (
                       <View style={styles.batchResultContent}>
                         <View style={styles.batchResultHeader}>
-                          <Ionicons 
-                            name={result.predicted_class === 'Healthy' ? 'checkmark-circle' : 'warning'} 
-                            size={24} 
-                            color={result.predicted_class === 'Healthy' ? '#4CAF50' : '#FF6B35'} 
+                          <Ionicons
+                            name={result.predicted_class === 'Healthy' ? 'checkmark-circle' : 'warning'}
+                            size={24}
+                            color={result.predicted_class === 'Healthy' ? '#4CAF50' : '#FF6B35'}
                           />
                           <Text style={styles.batchResultName}>{result.disease_info?.name}</Text>
                         </View>
                         <Text style={styles.batchResultConfidence}>
                           Độ tin cậy: {result.confidence?.toFixed(1)}%
                         </Text>
-                        
+
                         {result.predicted_class !== 'Healthy' && result.predicted_class_vi && getDiseaseIdByApiName(result.predicted_class_vi) && (
-                          <TouchableOpacity 
+                          <TouchableOpacity
                             style={styles.batchDetailButton}
                             onPress={() => {
                               const diseaseId = getDiseaseIdByApiName(result.predicted_class_vi!);
@@ -983,7 +983,7 @@ export default function HomeScreen() {
                   </View>
                 ))}
 
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.closeButton}
                   onPress={() => setShowBatchModal(false)}
                 >
@@ -1001,7 +1001,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: 'transparent',
   },
   header: {
     flexDirection: 'row',
@@ -1010,18 +1010,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 50,
     paddingBottom: 15,
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#000',
+    color: '#FFF',
   },
   scrollView: {
     flex: 1,
   },
   weatherCard: {
-    backgroundColor: '#FFF9C4',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     marginHorizontal: 15,
     marginTop: 15,
     borderRadius: 20,
@@ -1029,8 +1029,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#F9A825',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
   },
   weatherLeft: {
     flex: 1,
@@ -1038,21 +1038,21 @@ const styles = StyleSheet.create({
   weatherTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: '#FFF',
     marginBottom: 5,
   },
   weatherSubtitle: {
     fontSize: 14,
-    color: '#666',
+    color: '#E0E0E0',
   },
   weatherCity: {
     fontSize: 12,
-    color: '#999',
+    color: '#E0E0E0',
     marginTop: 3,
   },
   weatherLocation: {
     fontSize: 10,
-    color: '#999',
+    color: '#E0E0E0',
     marginTop: 2,
     fontFamily: 'monospace',
   },
@@ -1062,7 +1062,7 @@ const styles = StyleSheet.create({
   weatherTemp: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#333',
+    color: '#FFF',
   },
   weatherIcon: {
     width: 50,
@@ -1120,18 +1120,18 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   locationButton: {
-    backgroundColor: '#FFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 25,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    borderWidth: 2,
-    borderColor: '#FF9800',
-    shadowColor: '#FF9800',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.1,
     shadowRadius: 3,
     elevation: 3,
   },
@@ -1141,17 +1141,17 @@ const styles = StyleSheet.create({
   locationButtonText: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#FF9800',
+    color: '#FFF',
   },
   guideCard: {
-    backgroundColor: '#E3F2FD',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 15,
     padding: 16,
     marginHorizontal: 20,
     marginBottom: 20,
-    borderLeftWidth: 4,
-    borderLeftColor: '#2196F3',
-    shadowColor: '#2196F3',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -1166,7 +1166,7 @@ const styles = StyleSheet.create({
   guideTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1976D2',
+    color: '#FFF',
   },
   guideList: {
     gap: 10,
@@ -1178,7 +1178,7 @@ const styles = StyleSheet.create({
   },
   guideText: {
     fontSize: 14,
-    color: '#1565C0',
+    color: '#E0E0E0',
     flex: 1,
     lineHeight: 20,
   },
@@ -1210,10 +1210,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#F9A825',
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
   },
   weatherRetryText: {
     fontSize: 14,
@@ -1221,7 +1223,7 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   diseaseSection: {
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     padding: 20,
     marginTop: 15,
     marginHorizontal: 15,
@@ -1230,7 +1232,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#000',
+    color: '#FFF',
     marginBottom: 20,
   },
   processContainer: {
@@ -1246,7 +1248,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 15,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 10,
@@ -1265,17 +1267,19 @@ const styles = StyleSheet.create({
   },
   processLabel: {
     fontSize: 12,
-    color: '#666',
+    color: '#E0E0E0',
     textAlign: 'center',
     lineHeight: 16,
   },
   captureButton: {
-    backgroundColor: '#2196F3',
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
     borderRadius: 30,
     paddingVertical: 18,
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
   },
   captureButtonText: {
     color: '#fff',
@@ -1283,13 +1287,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   galleryButton: {
-    backgroundColor: '#fff',
-    borderWidth: 2,
-    borderColor: '#2C5F2D',
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
     marginTop: 10,
   },
   galleryButtonText: {
-    color: '#2C5F2D',
+    color: '#FFF',
   },
   featuresContainer: {
     paddingHorizontal: 15,
@@ -1298,7 +1302,7 @@ const styles = StyleSheet.create({
     paddingBottom: 80,
   },
   featureCard: {
-    backgroundColor: '#E8EAF6',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 20,
     padding: 20,
     flexDirection: 'row',
@@ -1317,7 +1321,7 @@ const styles = StyleSheet.create({
   featureText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#000',
+    color: '#FFF',
     flex: 1,
   },
   fab: {
@@ -1327,7 +1331,7 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#2196F3',
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 8,
@@ -1335,6 +1339,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 4.65,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
   },
   modalOverlay: {
     flex: 1,
@@ -1620,13 +1626,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   batchButton: {
-    backgroundColor: '#fff',
-    borderWidth: 2,
-    borderColor: '#FF9800',
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
     marginTop: 10,
   },
   batchButtonText: {
-    color: '#FF9800',
+    color: '#FFF',
   },
   batchSummary: {
     flexDirection: 'row',
