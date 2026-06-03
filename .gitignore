@@ -1,0 +1,23 @@
+# AI assistants & IDE tools
+.claude/
+.codegraph/
+.cursor/
+.gemini/
+.antigravitycli/
+CLAUDE.md
+skills-lock.json
+
+# logs
+*.log
+CropWise/frontend.log
+CropWise/model/backend.log
+
+# python cache
+**/__pycache__/
+*.pyc
+
+# dependencies & build files
+node_modules/
+.expo/
+dist/
+web-build/

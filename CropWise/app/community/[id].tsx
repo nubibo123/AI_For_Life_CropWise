@@ -24,6 +24,8 @@ import {
   markBestAnswer,
 } from '../../services/communityService';
 import { useAuth } from '../../contexts/AuthContext';
+import GlassCard from '../../components/ui/GlassCard';
+
 
 /**
  * Format thời gian đăng bài
@@ -143,7 +145,7 @@ export default function PostDetailScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#1976D2" />
+        <ActivityIndicator size="large" color="#81C784" />
       </View>
     );
   }
@@ -151,7 +153,7 @@ export default function PostDetailScreen() {
   if (!post) {
     return (
       <View style={styles.errorContainer}>
-        <Ionicons name="alert-circle-outline" size={60} color="#ccc" />
+        <Ionicons name="alert-circle-outline" size={60} color="rgba(255,255,255,0.4)" />
         <Text style={styles.errorText}>Không tìm thấy bài đăng</Text>
         <TouchableOpacity
           style={styles.backButton}
@@ -179,126 +181,158 @@ export default function PostDetailScreen() {
           style={styles.backButtonHeader}
           onPress={() => router.back()}
         >
-          <Ionicons name="arrow-back" size={24} color="#fff" />
+          <Ionicons name="arrow-back" size={22} color="#fff" />
         </TouchableOpacity>
+        <Text style={styles.headerTitle} numberOfLines={1}>Chi tiết bài đăng</Text>
         <TouchableOpacity style={styles.moreButtonHeader}>
-          <Ionicons name="ellipsis-vertical" size={24} color="#fff" />
+          <Ionicons name="ellipsis-vertical" size={22} color="#fff" />
         </TouchableOpacity>
       </View>
-
-      {/* Hình ảnh bài đăng */}
-      {post.imageUrl && (
-        <Image source={{ uri: post.imageUrl }} style={styles.postImage} />
-      )}
 
       <FlatList
         data={comments}
         renderItem={renderComment}
         keyExtractor={(item) => item.id}
         ListHeaderComponent={
-          <View style={styles.postContent}>
-            {/* Thông tin người đăng */}
-            <View style={styles.userInfo}>
-              <View style={styles.avatarContainer}>
-                {post.user.avatarUrl ? (
-                  <Image
-                    source={{ uri: post.user.avatarUrl }}
-                    style={styles.avatar}
-                  />
-                ) : (
-                  <View style={styles.avatarPlaceholder}>
-                    <Ionicons name="person" size={20} color="#666" />
-                  </View>
-                )}
+          <GlassCard 
+            intensity={post.hasExpertComment ? 35 : 20}
+            style={[
+              styles.postContent,
+              post.hasExpertComment && styles.expertCardBorder
+            ]}
+          >
+            {post.hasExpertComment && (
+              <View style={styles.expertBanner}>
+                <Ionicons name="ribbon" size={14} color="#FFF" />
+                <Text style={styles.expertBannerText}>ĐÃ ĐƯỢC CHUYÊN GIA GIẢI ĐÁP</Text>
               </View>
-              <View style={styles.userDetails}>
-                <View style={styles.userNameRow}>
-                  <Text style={styles.userName}>{post.user.name || 'Người dùng'}</Text>
-                  {post.user.country && (
-                    <>
-                      <Text style={styles.separator}> • </Text>
-                      <Text style={styles.country}>{post.user.country}</Text>
-                    </>
-                  )}
-                </View>
-                <View style={styles.metaRow}>
-                  <Text style={styles.timeAgo}>{formatTimeAgo(post.createdAt)}</Text>
-                  {post.cropType && (
-                    <>
-                      <Ionicons name="leaf" size={12} color="#4CAF50" />
-                      <Text style={styles.cropType}>{post.cropType}</Text>
-                    </>
-                  )}
-                </View>
-              </View>
-            </View>
-
-            {/* Tiêu đề và nội dung */}
-            {post.title && (
-              <Text style={styles.postTitle}>{post.title}</Text>
             )}
-            <Text style={styles.postContentText}>{post.content || ''}</Text>
 
-            {/* Dịch */}
-            <TouchableOpacity style={styles.translateButton}>
-              <Text style={styles.translateText}>Dịch</Text>
-            </TouchableOpacity>
+            <View style={styles.cardPadding}>
+              {/* Thông tin người đăng */}
+              <View style={styles.userInfo}>
+                <View style={styles.avatarContainer}>
+                  {post.user.avatarUrl ? (
+                    <Image
+                      source={{ uri: post.user.avatarUrl }}
+                      style={[
+                        styles.avatar,
+                        post.user.isExpert && styles.expertAvatarBorder
+                      ]}
+                    />
+                  ) : (
+                    <View style={[
+                      styles.avatarPlaceholder,
+                      post.user.isExpert && styles.expertAvatarBorder
+                    ]}>
+                      <Ionicons name="person" size={18} color="rgba(255,255,255,0.7)" />
+                    </View>
+                  )}
+                </View>
+                <View style={styles.userDetails}>
+                  <View style={styles.userNameRow}>
+                    <Text style={[styles.userName, post.user.isExpert && styles.expertUserName]}>
+                      {post.user.name || 'Người dùng'}
+                    </Text>
+                    {post.user.isExpert && (
+                      <Ionicons name="checkmark-done-circle" size={16} color="#81C784" style={styles.badgeIcon} />
+                    )}
+                    {post.user.country && (
+                      <>
+                        <Text style={styles.separator}> • </Text>
+                        <Text style={styles.country}>{post.user.country}</Text>
+                      </>
+                    )}
+                  </View>
+                  <View style={styles.metaRow}>
+                    <Text style={styles.timeAgo}>{formatTimeAgo(post.createdAt)}</Text>
+                    {post.cropType && (
+                      <View style={styles.cropBadge}>
+                        <Ionicons name="leaf" size={10} color="#81C784" />
+                        <Text style={styles.cropType}>{post.cropType}</Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+              </View>
 
-            {/* Nút tương tác bài đăng */}
-            <View style={styles.postInteractionRow}>
-              <TouchableOpacity
-                style={styles.interactionButton}
-                onPress={() => {
-                  const action = post.userLiked ? 'remove' : 'like';
-                  handleLikePost(action);
-                }}
-                activeOpacity={0.7}
-              >
-                <Ionicons
-                  name={post.userLiked ? 'thumbs-up' : 'thumbs-up-outline'}
-                  size={20}
-                  color={post.userLiked ? '#1976D2' : '#666'}
-                />
-                <Text
-                  style={[
-                    styles.interactionCount,
-                    post.userLiked && styles.interactionCountActive,
-                  ]}
+              {/* Tiêu đề và nội dung */}
+              {post.title && (
+                <Text style={styles.postTitle}>{post.title}</Text>
+              )}
+              <Text style={styles.postContentText}>{post.content || ''}</Text>
+
+              {/* Hình ảnh bài đăng */}
+              {post.imageUrl && (
+                <View style={styles.imageWrapper}>
+                  <Image source={{ uri: post.imageUrl }} style={styles.postImage} />
+                </View>
+              )}
+
+              {/* Dịch */}
+              <TouchableOpacity style={styles.translateButton}>
+                <Text style={styles.translateText}>Dịch</Text>
+              </TouchableOpacity>
+
+              {/* Nút tương tác bài đăng */}
+              <View style={styles.postInteractionRow}>
+                <View style={styles.leftActions}>
+                  <TouchableOpacity
+                    style={[styles.interactionButton, post.userLiked && styles.activeLikeButton]}
+                    onPress={() => {
+                      const action = post.userLiked ? 'remove' : 'like';
+                      handleLikePost(action);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons
+                      name={post.userLiked ? 'thumbs-up' : 'thumbs-up-outline'}
+                      size={18}
+                      color={post.userLiked ? '#81C784' : 'rgba(255, 255, 255, 0.7)'}
+                    />
+                    <Text
+                      style={[
+                        styles.interactionCount,
+                        post.userLiked && styles.activeLikeText,
+                      ]}
+                    >
+                      {post.likeCount ?? 0}
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.interactionButton, post.userDisliked && styles.activeDislikeButton]}
+                    onPress={() => {
+                      const action = post.userDisliked ? 'remove' : 'dislike';
+                      handleLikePost(action);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons
+                      name={post.userDisliked ? 'thumbs-down' : 'thumbs-down-outline'}
+                      size={18}
+                      color={post.userDisliked ? '#FF5252' : 'rgba(255, 255, 255, 0.7)'}
+                    />
+                    <Text
+                      style={[
+                        styles.interactionCount,
+                        post.userDisliked && styles.activeDislikeText,
+                      ]}
+                    >
+                      {post.dislikeCount ?? 0}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                <TouchableOpacity 
+                  style={styles.shareButton}
+                  activeOpacity={0.7}
                 >
-                  {post.likeCount ?? 0}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.interactionButton}
-                onPress={() => {
-                  const action = post.userDisliked ? 'remove' : 'dislike';
-                  handleLikePost(action);
-                }}
-                activeOpacity={0.7}
-              >
-                <Ionicons
-                  name={post.userDisliked ? 'thumbs-down' : 'thumbs-down-outline'}
-                  size={20}
-                  color={post.userDisliked ? '#1976D2' : '#666'}
-                />
-                <Text
-                  style={[
-                    styles.interactionCount,
-                    post.userDisliked && styles.interactionCountActive,
-                  ]}
-                >
-                  {post.dislikeCount ?? 0}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.interactionButton}>
-                <Ionicons name="share-outline" size={20} color="#666" />
-                <Text style={styles.interactionCount}>0</Text>
-              </TouchableOpacity>
+                  <Ionicons name="share-social-outline" size={18} color="rgba(255, 255, 255, 0.7)" />
+                </TouchableOpacity>
+              </View>
             </View>
-
-            {/* Separator */}
-            <View style={styles.separatorLine} />
-          </View>
+          </GlassCard>
         }
         ListEmptyComponent={renderEmptyComments}
         contentContainerStyle={styles.listContent}
@@ -308,12 +342,12 @@ export default function PostDetailScreen() {
       {/* Thanh nhập liệu phản hồi */}
       <View style={styles.replyInputContainer}>
         <TouchableOpacity style={styles.cameraButton}>
-          <Ionicons name="camera-outline" size={24} color="#666" />
+          <Ionicons name="camera-outline" size={24} color="rgba(255, 255, 255, 0.7)" />
         </TouchableOpacity>
         <TextInput
           style={styles.replyInput}
-          placeholder="Viết câu trả lời của bạn"
-          placeholderTextColor="#999"
+          placeholder="Viết câu trả lời của bạn..."
+          placeholderTextColor="rgba(255, 255, 255, 0.4)"
           value={replyText}
           onChangeText={setReplyText}
           multiline
@@ -326,7 +360,7 @@ export default function PostDetailScreen() {
           <Ionicons
             name="send"
             size={20}
-            color={replyText.trim() ? '#1976D2' : '#ccc'}
+            color={replyText.trim() ? '#81C784' : 'rgba(255, 255, 255, 0.3)'}
           />
         </TouchableOpacity>
       </View>
@@ -354,70 +388,111 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 16,
-    color: '#666',
+    color: 'rgba(255,255,255,0.6)',
     marginTop: 16,
     marginBottom: 24,
   },
   backButton: {
-    backgroundColor: '#1976D2',
+    backgroundColor: '#81C784',
     paddingHorizontal: 24,
     paddingVertical: 12,
-    borderRadius: 8,
+    borderRadius: 20,
   },
   backButtonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   header: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingTop: 50,
-    paddingBottom: 16,
-    zIndex: 10,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
   },
   backButtonHeader: {
     padding: 8,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
     borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
   },
   moreButtonHeader: {
     padding: 8,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
     borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  headerTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#FFF',
   },
   postImage: {
     width: '100%',
-    height: 300,
+    height: 200,
     resizeMode: 'cover',
   },
+  imageWrapper: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
   postContent: {
+    margin: 16,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    overflow: 'hidden',
+  },
+  expertCardBorder: {
+    borderColor: 'rgba(129, 199, 132, 0.45)',
+    borderWidth: 1.5,
+  },
+  expertBanner: {
+    backgroundColor: 'rgba(76, 175, 80, 0.85)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 6,
+  },
+  expertBannerText: {
+    color: '#FFF',
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 1,
+  },
+  cardPadding: {
     padding: 16,
   },
   userInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   avatarContainer: {
-    marginRight: 10,
+    marginRight: 12,
   },
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+  },
+  expertAvatarBorder: {
+    borderColor: '#81C784',
+    borderWidth: 2,
   },
   avatarPlaceholder: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#E3F2FD',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -430,80 +505,131 @@ const styles = StyleSheet.create({
   },
   userName: {
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: '700',
+    color: '#FFF',
+  },
+  expertUserName: {
     color: '#81C784',
   },
+  badgeIcon: {
+    marginLeft: 4,
+  },
   separator: {
-    fontSize: 15,
-    color: '#999',
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.4)',
   },
   country: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: 13,
+    color: 'rgba(255, 255, 255, 0.7)',
   },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 4,
+    gap: 8,
   },
   timeAgo: {
-    fontSize: 12,
-    color: '#999',
-    marginRight: 8,
+    fontSize: 11,
+    color: 'rgba(255, 255, 255, 0.45)',
+  },
+  cropBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(129, 199, 132, 0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+    gap: 4,
   },
   cropType: {
-    fontSize: 12,
-    color: '#4CAF50',
-    marginLeft: 4,
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#81C784',
   },
   postTitle: {
     fontSize: 18,
     fontWeight: '700',
     color: '#FFF',
-    marginBottom: 12,
+    marginBottom: 8,
+    lineHeight: 25,
   },
   postContentText: {
     fontSize: 15,
-    color: '#F5F5F5',
+    color: 'rgba(255, 255, 255, 0.85)',
     lineHeight: 22,
     marginBottom: 12,
   },
   translateButton: {
     alignSelf: 'flex-start',
-    marginBottom: 16,
+    marginBottom: 14,
   },
   translateText: {
-    fontSize: 14,
-    color: '#1976D2',
+    fontSize: 13,
+    color: '#64B5F6',
+    fontWeight: '600',
   },
   postInteractionRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#F5F5F5',
+    borderTopColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  leftActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   interactionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    gap: 6,
+  },
+  activeLikeButton: {
+    backgroundColor: 'rgba(129, 199, 132, 0.15)',
+    borderColor: 'rgba(129, 199, 132, 0.3)',
+    borderWidth: 1,
+  },
+  activeDislikeButton: {
+    backgroundColor: 'rgba(255, 82, 82, 0.15)',
+    borderColor: 'rgba(255, 82, 82, 0.3)',
+    borderWidth: 1,
+  },
+  shareButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    padding: 6,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 32,
+    height: 32,
   },
   interactionCount: {
-    fontSize: 14,
-    color: '#666',
-    marginLeft: 6,
-  },
-  interactionCountActive: {
-    color: '#1976D2',
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.7)',
     fontWeight: '600',
+  },
+  activeLikeText: {
+    color: '#81C784',
+    fontWeight: '700',
+  },
+  activeDislikeText: {
+    color: '#FF5252',
+    fontWeight: '700',
   },
   separatorLine: {
     height: 1,
-    backgroundColor: '#F5F5F5',
-    marginVertical: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    marginVertical: 14,
   },
   listContent: {
-    paddingBottom: 20,
+    paddingBottom: 24,
+    paddingTop: 8,
   },
   emptyComments: {
     padding: 40,
@@ -511,9 +637,10 @@ const styles = StyleSheet.create({
   },
   emptyCommentsText: {
     fontSize: 14,
-    color: '#999',
+    color: 'rgba(255, 255, 255, 0.5)',
     marginTop: 16,
     textAlign: 'center',
+    lineHeight: 20,
   },
   replyInputContainer: {
     flexDirection: 'row',
@@ -521,8 +648,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.1)',
-    backgroundColor: 'transparent',
+    borderTopColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: 'rgba(15, 10, 30, 0.65)',
     gap: 8,
   },
   cameraButton: {
@@ -530,13 +657,15 @@ const styles = StyleSheet.create({
   },
   replyInput: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderRadius: 22,
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 8,
     fontSize: 14,
     color: '#FFF',
     maxHeight: 100,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   sendButton: {
     padding: 8,

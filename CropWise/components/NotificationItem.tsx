@@ -1,5 +1,5 @@
 /**
- * Component hiển thị một thông báo
+ * Component hiển thị một thông báo trong giao diện kính mờ (Glassmorphism)
  */
 
 import { Ionicons } from '@expo/vector-icons';
@@ -12,6 +12,7 @@ import {
   View,
 } from 'react-native';
 import { Notification } from '../types/notification';
+import GlassCard from './ui/GlassCard';
 
 interface NotificationItemProps {
   notification: Notification;
@@ -21,7 +22,7 @@ interface NotificationItemProps {
 }
 
 /**
- * Format thời gian thông báo (ví dụ: "45 m", "7 h", "2 d")
+ * Format thời gian thông báo (ví dụ: "45 phút trước", "2 giờ trước")
  */
 const formatTimeAgo = (dateString: string | undefined): string => {
   if (!dateString) return 'Vừa xong';
@@ -36,12 +37,12 @@ const formatTimeAgo = (dateString: string | undefined): string => {
   const diffDays = Math.floor(diffHours / 24);
 
   if (diffDays > 0) {
-    return `${diffDays} d`;
+    return `${diffDays} ngày trước`;
   } else if (diffHours > 0) {
-    return `${diffHours} h`;
+    return `${diffHours} giờ trước`;
   } else {
     const diffMinutes = Math.floor(diffMs / (1000 * 60));
-    return `${diffMinutes} m`;
+    return `${diffMinutes > 0 ? diffMinutes : 1} phút trước`;
   }
 };
 
@@ -52,9 +53,9 @@ const getNotificationIcon = (type: Notification['type']): string => {
   switch (type) {
     case 'comment':
     case 'reply':
-      return 'chatbubble';
+      return 'chatbubble-ellipses';
     case 'like':
-      return 'heart';
+      return 'thumbs-up';
     case 'mention':
       return 'at';
     case 'follow':
@@ -75,19 +76,19 @@ const getNotificationIconColor = (type: Notification['type']): string => {
   switch (type) {
     case 'comment':
     case 'reply':
-      return '#1976D2';
+      return '#81C784';
     case 'like':
-      return '#E91E63';
+      return '#81C784';
     case 'mention':
-      return '#FF9800';
+      return '#FFA726';
     case 'follow':
-      return '#4CAF50';
+      return '#64B5F6';
     case 'post_approved':
-      return '#4CAF50';
+      return '#81C784';
     case 'post_rejected':
-      return '#F44336';
+      return '#FF5252';
     default:
-      return '#666';
+      return 'rgba(255, 255, 255, 0.6)';
   }
 };
 
@@ -116,85 +117,98 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
 
   return (
     <TouchableOpacity
-      style={[
-        styles.container,
-        !notification.isRead && styles.unreadContainer,
-      ]}
+      style={styles.outerContainer}
       onPress={handlePress}
-      activeOpacity={0.7}
+      activeOpacity={0.8}
     >
-      {/* Icon thông báo */}
-      <View
+      <GlassCard
+        intensity={notification.isRead ? 20 : 35}
         style={[
-          styles.iconContainer,
-          { backgroundColor: `${getNotificationIconColor(notification.type)}20` },
+          styles.container,
+          !notification.isRead && styles.unreadContainer,
         ]}
       >
-        <Ionicons
-          name={getNotificationIcon(notification.type) as any}
-          size={24}
-          color={getNotificationIconColor(notification.type)}
-        />
-      </View>
-
-      {/* Nội dung thông báo */}
-      <View style={styles.content}>
-        <View style={styles.header}>
-          <Text style={styles.title}>{notification.title}</Text>
-          {!notification.isRead && <View style={styles.unreadDot} />}
+        {/* Icon thông báo */}
+        <View
+          style={[
+            styles.iconContainer,
+            { backgroundColor: `${getNotificationIconColor(notification.type)}15` },
+          ]}
+        >
+          <Ionicons
+            name={getNotificationIcon(notification.type) as any}
+            size={20}
+            color={getNotificationIconColor(notification.type)}
+          />
         </View>
-        <Text style={styles.message} numberOfLines={2}>
-          {notification.message || ''}
-        </Text>
-        <Text style={styles.timeAgo}>
-          {formatTimeAgo(notification.createdAt)}
-        </Text>
-      </View>
 
-      {/* Avatar người dùng (nếu có) */}
-      {notification.user && (
-        <View style={styles.avatarContainer}>
-          {notification.user.avatarUrl ? (
-            <Image
-              source={{ uri: notification.user.avatarUrl }}
-              style={styles.avatar}
-            />
-          ) : (
-            <View style={styles.avatarPlaceholder}>
-              <Ionicons name="person" size={16} color="#666" />
-            </View>
-          )}
+        {/* Nội dung thông báo */}
+        <View style={styles.content}>
+          <View style={styles.header}>
+            <Text style={styles.title} numberOfLines={1}>{notification.title}</Text>
+            {!notification.isRead && <View style={styles.unreadDot} />}
+          </View>
+          <Text style={styles.message} numberOfLines={2}>
+            {notification.message || ''}
+          </Text>
+          <Text style={styles.timeAgo}>
+            {formatTimeAgo(notification.createdAt)}
+          </Text>
         </View>
-      )}
 
-      {/* Nút xóa */}
-      <TouchableOpacity
-        style={styles.deleteButton}
-        onPress={handleDelete}
-        activeOpacity={0.7}
-      >
-        <Ionicons name="close" size={18} color="#999" />
-      </TouchableOpacity>
+        {/* Avatar người dùng (nếu có) */}
+        {notification.user && (
+          <View style={styles.avatarContainer}>
+            {notification.user.avatarUrl ? (
+              <Image
+                source={{ uri: notification.user.avatarUrl }}
+                style={styles.avatar}
+              />
+            ) : (
+              <View style={styles.avatarPlaceholder}>
+                <Ionicons name="person" size={14} color="rgba(255, 255, 255, 0.5)" />
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* Nút xóa */}
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={handleDelete}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="close" size={16} color="rgba(255, 255, 255, 0.4)" />
+        </TouchableOpacity>
+      </GlassCard>
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
+  outerContainer: {
+    marginHorizontal: 16,
+    marginVertical: 6,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
   container: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    padding: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F5F5F5',
+    alignItems: 'center',
+    padding: 14,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
   },
   unreadContainer: {
-    backgroundColor: '#F0F7FF',
+    borderColor: 'rgba(129, 199, 132, 0.45)',
+    backgroundColor: 'rgba(129, 199, 132, 0.08)',
   },
   iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -208,46 +222,52 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   title: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#000',
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFF',
     marginRight: 8,
+    flex: 1,
   },
   unreadDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#1976D2',
+    backgroundColor: '#81C784',
+    marginRight: 4,
   },
   message: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
+    fontSize: 13,
+    color: 'rgba(255, 255, 255, 0.8)',
+    lineHeight: 18,
     marginBottom: 4,
   },
   timeAgo: {
-    fontSize: 12,
-    color: '#999',
+    fontSize: 11,
+    color: 'rgba(255, 255, 255, 0.45)',
   },
   avatarContainer: {
-    marginLeft: 12,
+    marginLeft: 8,
+    marginRight: 4,
   },
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   avatarPlaceholder: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#E3F2FD',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   deleteButton: {
-    padding: 4,
-    marginLeft: 8,
+    padding: 6,
+    marginLeft: 6,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
   },
 });
-

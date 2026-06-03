@@ -78,51 +78,52 @@ const CURRENT_USER: User = {
 let MOCK_POSTS: Post[] = [
   {
     id: 'post1',
-    user: MOCK_USERS[0], // Shashi
-    title: 'Help identifying problem with my Bean',
+    user: MOCK_USERS[0],
+    title: 'Hỏi về bệnh đốm lá ngô',
     content:
-      'Plantix has detected a possible problem with my Bean. I was given a few possibilities: Healthy. Can you help me identifying the issue?',
-    imageUrl: undefined, // Hình ảnh bó đậu que màu xanh lá và vàng nhạt
+      'Ruộng ngô nhà tôi xuất hiện các đốm dài màu nâu xám dọc theo lá. Cho tôi hỏi đây là bệnh gì và cách chữa trị?',
+    imageUrl: undefined,
     createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(), // 4 giờ trước
-    likeCount: 0,
+    likeCount: 3,
     dislikeCount: 0,
     commentCount: 1,
     comments: [MOCK_COMMENTS[0]],
-    cropType: 'Đậu',
-    tags: ['Đậu'],
+    cropType: 'Ngô',
+    tags: ['Ngô', 'Bệnh đốm lá'],
   },
   {
     id: 'post2',
-    user: MOCK_USERS[2], // Abhi V
-    title: 'What is the problem with the crop?',
+    user: MOCK_USERS[2],
+    title: 'Cây ngô bị héo rũ gốc và thối thân',
     content:
-      'Plants are having stalk without leaves and some nest like structure in leaf tip',
-    imageUrl: undefined, // Hình ảnh cây trồng trong đất nâu, có cấu trúc tổ ở đầu lá
-    imageUrls: undefined, // Có thể có nhiều ảnh
+      'Lá ngô bị khô từ dưới lên, gốc ngô mềm và có mùi hôi. Cây dễ bị gãy đổ.',
+    imageUrl: undefined,
+    imageUrls: undefined,
     createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 ngày trước
-    likeCount: 0,
+    likeCount: 1,
     dislikeCount: 0,
     commentCount: 1,
     comments: [MOCK_COMMENTS[1]],
-    cropType: 'Đậu gà & Đậu xanh',
-    tags: ['cây ngô'],
+    cropType: 'Ngô',
+    tags: ['Ngô', 'Thối thân'],
   },
   {
     id: 'post3',
-    user: MOCK_USERS[1], // Venkat P.
-    title: 'Cây đậu tương của tôi có vấn đề gì?',
+    user: MOCK_USERS[1],
+    title: 'Cây ngô bị lùn sọc đen',
     content:
-      'Tôi đã trồng đậu tương được 2 tháng. Gần đây tôi nhận thấy một số lá bị vàng và có đốm nâu. Có ai biết nguyên nhân không?',
+      'Một số cây ngô bị lùn còi cọc, lá xanh đậm hơn bình thường và có sọc nổi dọc theo gân lá. Có ai gặp hiện tượng này chưa?',
     imageUrl: undefined,
     createdAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(), // 12 giờ trước
     likeCount: 2,
     dislikeCount: 0,
     commentCount: 0,
     comments: [],
-    cropType: 'Đậu tương',
-    tags: ['Đậu tương'],
+    cropType: 'Ngô',
+    tags: ['Ngô', 'Lùn còi cọc'],
   },
 ];
+
 
 // Export MOCK_POSTS
 export { MOCK_POSTS };

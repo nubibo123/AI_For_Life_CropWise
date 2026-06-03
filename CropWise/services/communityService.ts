@@ -53,6 +53,7 @@ const mapPost = (id: string, data: any): Post => ({
   userLiked: false,
   userDisliked: false,
   bestAnswerId: data.bestAnswerId ?? null,
+  hasExpertComment: data.hasExpertComment ?? false,
 });
 
 const mapComment = (id: string, data: any): Comment => ({
@@ -119,11 +120,13 @@ const logFirestoreError = (error: unknown, context: string) => {
 type MinimalUserProfile = {
   name: string;
   avatarUrl: string | null | undefined;
+  isExpert?: boolean;
 };
 
 const defaultUserProfile: MinimalUserProfile = {
   name: 'Người dùng',
   avatarUrl: null,
+  isExpert: false,
 };
 
 const userProfileCache = new Map<string, MinimalUserProfile>();
@@ -136,6 +139,7 @@ const fetchUserProfile = async (userId: string): Promise<MinimalUserProfile> => 
       const profile: MinimalUserProfile = {
         name: data.name ?? defaultUserProfile.name,
         avatarUrl: data.avatarUrl ?? data.photoURL ?? defaultUserProfile.avatarUrl,
+        isExpert: data.isExpert ?? false,
       };
       userProfileCache.set(userId, profile);
       return profile;
@@ -157,6 +161,7 @@ const getUserProfile = async (
     return {
       name: fallbackName ?? defaultUserProfile.name,
       avatarUrl: fallbackAvatar ?? defaultUserProfile.avatarUrl,
+      isExpert: false,
     };
   }
   if (userProfileCache.has(userId)) {
@@ -164,12 +169,14 @@ const getUserProfile = async (
     return {
       name: cached.name ?? fallbackName ?? defaultUserProfile.name,
       avatarUrl: cached.avatarUrl ?? fallbackAvatar ?? defaultUserProfile.avatarUrl,
+      isExpert: cached.isExpert ?? false,
     };
   }
   const profile = await fetchUserProfile(userId);
   return {
     name: profile.name ?? fallbackName ?? defaultUserProfile.name,
     avatarUrl: profile.avatarUrl ?? fallbackAvatar ?? defaultUserProfile.avatarUrl,
+    isExpert: profile.isExpert ?? false,
   };
 };
 
@@ -183,6 +190,7 @@ const hydrateEntityUser = async <T extends EntityWithUser>(entity: T): Promise<T
       ...entity.user,
       name: profile.name,
       avatarUrl: profile.avatarUrl ?? undefined,
+      isExpert: profile.isExpert,
     },
   };
 };
@@ -502,6 +510,9 @@ export const createCommentRealtime = async (
   if (!user) return null;
 
   try {
+    const userProfile = await fetchUserProfile(user.uid);
+    const isExpert = userProfile.isExpert ?? false;
+
     const commentsCol = collection(db, 'posts', commentData.postId, 'comments');
     const commentRef = doc(commentsCol);
     const postRef = doc(db, 'posts', commentData.postId);
@@ -515,6 +526,7 @@ export const createCommentRealtime = async (
       postAuthorId = data.authorId ?? null;
       postTitle = data.title ?? null;
       const currentCount = data.commentCount ?? 0;
+      const currentHasExpert = data.hasExpertComment ?? false;
 
       tx.set(commentRef, {
         authorId: user.uid,
@@ -528,7 +540,10 @@ export const createCommentRealtime = async (
         createdAt: serverTimestamp(),
       });
 
-      tx.update(postRef, { commentCount: currentCount + 1 });
+      tx.update(postRef, { 
+        commentCount: currentCount + 1,
+        ...(isExpert && !currentHasExpert ? { hasExpertComment: true } : {})
+      });
     });
 
     const snap = await getDoc(commentRef);

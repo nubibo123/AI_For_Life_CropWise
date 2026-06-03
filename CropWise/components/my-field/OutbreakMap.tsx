@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import MapView, { Circle, Marker, Region } from 'react-native-maps';
 import { OutbreakAlert } from '../../types/outbreak';
+import GlassCard from '../ui/GlassCard';
 
 type Props = {
   outbreaks: OutbreakAlert[];
@@ -9,16 +10,16 @@ type Props = {
 
 const severityColors: Record<OutbreakAlert['severity'], { fill: string; stroke: string }> = {
   low: {
-    fill: 'rgba(34, 197, 94, 0.25)',
-    stroke: 'rgba(34, 197, 94, 0.8)',
+    fill: 'rgba(52, 211, 153, 0.25)', // emerald-400
+    stroke: 'rgba(52, 211, 153, 0.8)',
   },
   medium: {
-    fill: 'rgba(250, 204, 21, 0.25)',
-    stroke: 'rgba(234, 179, 8, 0.8)',
+    fill: 'rgba(251, 191, 36, 0.25)', // amber-400
+    stroke: 'rgba(251, 191, 36, 0.8)',
   },
   high: {
-    fill: 'rgba(239, 68, 68, 0.25)',
-    stroke: 'rgba(239, 68, 68, 0.9)',
+    fill: 'rgba(248, 113, 113, 0.25)', // red-400
+    stroke: 'rgba(248, 113, 113, 0.9)',
   },
 };
 
@@ -37,7 +38,7 @@ export const OutbreakMap: React.FC<Props> = ({ outbreaks }) => {
   );
 
   return (
-    <View style={styles.container}>
+    <GlassCard intensity={20} style={styles.container}>
       <Text style={styles.title}>Bản đồ vùng cảnh báo</Text>
       <MapView style={styles.map} initialRegion={initialRegion}>
         {outbreaks.map((alert) => {
@@ -60,30 +61,31 @@ export const OutbreakMap: React.FC<Props> = ({ outbreaks }) => {
           );
         })}
       </MapView>
-    </View>
+    </GlassCard>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 20,
+    borderRadius: 24,
     overflow: 'hidden',
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
     marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
   },
   title: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#0f172a',
+    color: '#FFF',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
   },
   map: {
     height: 240,
     width: '100%',
   },
 });
+
 

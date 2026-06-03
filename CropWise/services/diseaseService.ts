@@ -3,7 +3,7 @@
 // const API_URL = 'http://10.0.2.2:8001'; // Cho Android emulator (không dùng Expo Go)
 // const API_URL = 'http://localhost:8001'; // Cho web
 
-const API_URL = 'https://25a0-35-252-244-105.ngrok-free.app';
+const API_URL = 'https://5b3d-34-87-119-80.ngrok-free.app';
 export interface DiseaseInfo {
   name: string;
   description: string;

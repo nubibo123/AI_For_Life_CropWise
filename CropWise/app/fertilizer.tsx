@@ -9,6 +9,8 @@ import {
   Image,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 interface Fertilizer {
   id: string;
@@ -22,6 +24,7 @@ interface Fertilizer {
 }
 
 export default function FertilizerRecommendation() {
+  const router = useRouter();
   const [selectedDisease, setSelectedDisease] = useState('');
   const [severity, setSeverity] = useState('');
   const [area, setArea] = useState('');
@@ -136,32 +139,32 @@ export default function FertilizerRecommendation() {
     // 2. Chọn phân phù hợp nhất
     let bestFertilizer = null;
 
-if (selectedDisease === "yellow_leaf") {
-  // chỉ so N
-  bestFertilizer = fertilizers.reduce((best, curr) => {
-    const diffBest = Math.abs(best.n - neededN);
-    const diffCurr = Math.abs(curr.n - neededN);
-    return diffCurr < diffBest ? curr : best;
-  });
-}
+    if (selectedDisease === "yellow_leaf") {
+      // chỉ so N
+      bestFertilizer = fertilizers.reduce((best, curr) => {
+        const diffBest = Math.abs(best.n - neededN);
+        const diffCurr = Math.abs(curr.n - neededN);
+        return diffCurr < diffBest ? curr : best;
+      });
+    }
 
-if (selectedDisease === "purple_leaf") {
-  // chỉ so P
-  bestFertilizer = fertilizers.reduce((best, curr) => {
-    const diffBest = Math.abs(best.p - neededP);
-    const diffCurr = Math.abs(curr.p - neededP);
-    return diffCurr < diffBest ? curr : best;
-  });
-}
+    if (selectedDisease === "purple_leaf") {
+      // chỉ so P
+      bestFertilizer = fertilizers.reduce((best, curr) => {
+        const diffBest = Math.abs(best.p - neededP);
+        const diffCurr = Math.abs(curr.p - neededP);
+        return diffCurr < diffBest ? curr : best;
+      });
+    }
 
-if (selectedDisease === "burnt_edge") {
-  // chỉ so K
-  bestFertilizer = fertilizers.reduce((best, curr) => {
-    const diffBest = Math.abs(best.k - neededK);
-    const diffCurr = Math.abs(curr.k - neededK);
-    return diffCurr < diffBest ? curr : best;
-  });
-}
+    if (selectedDisease === "burnt_edge") {
+      // chỉ so K
+      bestFertilizer = fertilizers.reduce((best, curr) => {
+        const diffBest = Math.abs(best.k - neededK);
+        const diffCurr = Math.abs(curr.k - neededK);
+        return diffCurr < diffBest ? curr : best;
+      });
+    }
 
     if (!bestFertilizer) return;
 
@@ -191,6 +194,9 @@ if (selectedDisease === "burnt_edge") {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={24} color="#FFF" />
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>Gợi ý phân bón</Text>
       </View>
 
@@ -199,11 +205,13 @@ if (selectedDisease === "burnt_edge") {
         <Picker
           selectedValue={selectedDisease}
           onValueChange={(v: string) => setSelectedDisease(v)}
+          dropdownIconColor="#FFF"
+          style={{ color: '#FFF' }}
         >
-          <Picker.Item label="Chọn bệnh" value="" />
-          <Picker.Item label="Lá vàng (thiếu N)" value="yellow_leaf" />
-          <Picker.Item label="Lá tím (thiếu P)" value="purple_leaf" />
-          <Picker.Item label="Cháy mép lá (thiếu K)" value="burnt_edge" />
+          <Picker.Item label="Chọn bệnh" value="" style={{ backgroundColor: '#1A1A24', color: '#FFF' }} />
+          <Picker.Item label="Lá vàng (thiếu N)" value="yellow_leaf" style={{ backgroundColor: '#1A1A24', color: '#FFF' }} />
+          <Picker.Item label="Lá tím (thiếu P)" value="purple_leaf" style={{ backgroundColor: '#1A1A24', color: '#FFF' }} />
+          <Picker.Item label="Cháy mép lá (thiếu K)" value="burnt_edge" style={{ backgroundColor: '#1A1A24', color: '#FFF' }} />
         </Picker>
       </View>
 
@@ -214,6 +222,7 @@ if (selectedDisease === "burnt_edge") {
         onChangeText={setSeverity}
         keyboardType="numeric"
         placeholder="Nhập mức độ bệnh (0–100%)"
+        placeholderTextColor="rgba(255, 255, 255, 0.4)"
       />
 
       <Text style={styles.label}>Diện tích (m²):</Text>
@@ -223,6 +232,7 @@ if (selectedDisease === "burnt_edge") {
         onChangeText={setArea}
         keyboardType="numeric"
         placeholder="Nhập diện tích"
+        placeholderTextColor="rgba(255, 255, 255, 0.4)"
       />
 
       <TouchableOpacity style={styles.button} onPress={handleCalculate}>
@@ -233,9 +243,9 @@ if (selectedDisease === "burnt_edge") {
         <View style={styles.resultContainer}>
           <Text style={styles.resultTitle}>Tổng NPK cần bổ sung</Text>
           <View style={styles.npkContainer}>
-            <Text>N: {result.npk.n.toFixed(1)} kg</Text>
-            <Text>P: {result.npk.p.toFixed(1)} kg</Text>
-            <Text>K: {result.npk.k.toFixed(1)} kg</Text>
+            <Text style={styles.npkText}>N: {result.npk.n.toFixed(1)} kg</Text>
+            <Text style={styles.npkText}>P: {result.npk.p.toFixed(1)} kg</Text>
+            <Text style={styles.npkText}>K: {result.npk.k.toFixed(1)} kg</Text>
           </View>
 
           <Text style={styles.resultTitle}>Phân bón đề xuất</Text>
@@ -246,9 +256,9 @@ if (selectedDisease === "burnt_edge") {
             />
             <View style={styles.fertilizerInfo}>
               <Text style={styles.fertilizerName}>{result.recommended.name}</Text>
-              <Text>Giá/kg: {(result.recommended.pricePerBag / result.recommended.bagWeight).toLocaleString()} đ</Text>
-              <Text>Số kg cần mua: {result.weightKg.toFixed(1)} kg</Text>
-              <Text>Tổng chi phí: {result.cost.toLocaleString()} đ</Text>
+              <Text style={styles.fertilizerText}>Giá/kg: {(result.recommended.pricePerBag / result.recommended.bagWeight).toLocaleString()} đ</Text>
+              <Text style={styles.fertilizerText}>Số kg cần mua: {result.weightKg.toFixed(1)} kg</Text>
+              <Text style={styles.fertilizerText}>Tổng chi phí: {result.cost.toLocaleString()} đ</Text>
             </View>
           </View>
 
@@ -258,8 +268,8 @@ if (selectedDisease === "burnt_edge") {
               <Image source={{ uri: item.image }} style={styles.fertilizerImage} />
               <View style={styles.fertilizerInfo}>
                 <Text style={styles.fertilizerName}>{item.name}</Text>
-                <Text>N:{item.n}%, P:{item.p}%, K:{item.k}%</Text>
-                <Text>Giá mỗi bao: {item.pricePerBag.toLocaleString()} đ</Text>
+                <Text style={styles.fertilizerText}>N:{item.n}%, P:{item.p}%, K:{item.k}%</Text>
+                <Text style={styles.fertilizerText}>Giá mỗi bao: {item.pricePerBag.toLocaleString()} đ</Text>
               </View>
             </View>
           ))}
@@ -276,78 +286,97 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   header: {
-    marginBottom: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 40,
+    marginBottom: 20,
+  },
+  backButton: {
+    padding: 8,
+    marginRight: 8,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: '600',
+    fontSize: 22,
+    fontWeight: '700',
     color: '#FFF',
   },
   label: {
     fontSize: 14,
-    color: '#E0E0E0',
+    color: 'rgba(255, 255, 255, 0.8)',
     marginBottom: 6,
     marginTop: 16,
   },
   input: {
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-    borderRadius: 8,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: 12,
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 12,
     marginBottom: 16,
     fontSize: 16,
     color: '#FFF',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
   },
   pickerContainer: {
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-    borderRadius: 8,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: 12,
     overflow: 'hidden',
     marginBottom: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
   },
   button: {
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    backgroundColor: '#10b981',
     paddingVertical: 14,
-    borderRadius: 10,
+    borderRadius: 12,
     alignItems: 'center',
     marginBottom: 24,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.4)',
+    justifyContent: 'center',
   },
   buttonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   resultContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     padding: 16,
-    borderRadius: 10,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    marginBottom: 20,
   },
   resultTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '700',
     marginBottom: 12,
     color: '#FFF',
+    marginTop: 10,
   },
   npkContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     padding: 16,
-    borderRadius: 10,
+    borderRadius: 12,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  npkText: {
+    color: '#FFF',
+    fontWeight: '700',
+    fontSize: 15,
   },
   fertilizerCard: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 12,
     padding: 12,
     alignItems: 'center',
     marginBottom: 12,
-    shadowOpacity: 0.1,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
   },
   fertilizerImage: {
     width: 60,
@@ -359,8 +388,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   fertilizerName: {
-    fontWeight: '600',
+    fontWeight: '700',
     fontSize: 16,
     color: '#81C784',
+  },
+  fertilizerText: {
+    color: '#E0E0E0',
+    fontSize: 13,
+    marginTop: 2,
   },
 });

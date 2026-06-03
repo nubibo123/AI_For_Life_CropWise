@@ -13,9 +13,10 @@ service cloud.firestore {
     }
 
     // Outbreaks collection
-    match /outbreaks/{document=**} {
+    match /outbreakAlerts/{document=**} {
       allow read, write: if request.auth != null;
     }
+
 
     // Posts collection
     match /posts/{postId} {
@@ -39,7 +40,7 @@ service cloud.firestore {
         ) ||
         (
           request.resource.data.diff(resource.data).changedKeys()
-            .hasOnly(['likeCount', 'dislikeCount', 'voteCount', 'commentCount']) &&
+            .hasOnly(['likeCount', 'dislikeCount', 'voteCount', 'commentCount', 'hasExpertComment']) &&
           (
             request.resource.data.likeCount == resource.data.likeCount + 1 ||
             request.resource.data.likeCount == resource.data.likeCount - 1 ||
@@ -53,6 +54,8 @@ service cloud.firestore {
           (
             request.resource.data.voteCount == resource.data.voteCount + 1 ||
             request.resource.data.voteCount == resource.data.voteCount - 1 ||
+            request.resource.data.voteCount == resource.data.voteCount + 2 ||
+            request.resource.data.voteCount == resource.data.voteCount - 2 ||
             request.resource.data.voteCount == resource.data.voteCount
           ) &&
           (
@@ -89,7 +92,7 @@ service cloud.firestore {
 
         // Update comment:
         // - Author can edit own content
-        // - Any authenticated user can update voteCount by -1/0/+1 only (atomic)
+        // - Any authenticated user can update voteCount by -2/-1/0/+1/+2 (atomic)
         allow update: if (
           // Author edits own content (content or imageUrl)
           (request.auth != null
@@ -97,11 +100,13 @@ service cloud.firestore {
            && request.resource.data.diff(resource.data).changedKeys()
              .hasOnly(['content', 'imageUrl']))
         ) || (
-          // Vote change: only voteCount may change by -1/0/+1
+          // Vote change: only voteCount may change by -2/-1/0/+1/+2
           (request.auth != null
            && request.resource.data.diff(resource.data).changedKeys().hasOnly(['voteCount'])
            && (request.resource.data.voteCount == resource.data.voteCount + 1
                || request.resource.data.voteCount == resource.data.voteCount - 1
+               || request.resource.data.voteCount == resource.data.voteCount + 2
+               || request.resource.data.voteCount == resource.data.voteCount - 2
                || request.resource.data.voteCount == resource.data.voteCount))
         );
 

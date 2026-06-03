@@ -353,7 +353,7 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
 
       {/* Header */}
       <View style={styles.header}>
@@ -364,12 +364,12 @@ export default function HomeScreen() {
               <Ionicons
                 name="refresh"
                 size={24}
-                color={loading ? "#ccc" : "#333"}
+                color={loading ? "rgba(255, 255, 255, 0.4)" : "#FFF"}
               />
             </TouchableOpacity>
           )}
           <TouchableOpacity>
-            <Ionicons name="ellipsis-vertical" size={24} color="#333" />
+            <Ionicons name="ellipsis-vertical" size={24} color="#FFF" />
           </TouchableOpacity>
         </View>
       </View>
@@ -560,10 +560,10 @@ export default function HomeScreen() {
             onPress={() => router.push('/fertilizer')} // ← chuyển sang màn hình fertilizer.tsx
           >
             <View style={styles.featureIconContainer}>
-              <Ionicons name="calculator" size={28} color="#333" />
+              <Ionicons name="calculator" size={28} color="#81C784" />
             </View>
             <Text style={styles.featureText}>Tính toán phân bón</Text>
-            <Ionicons name="chevron-forward" size={24} color="#666" />
+            <Ionicons name="chevron-forward" size={24} color="rgba(255, 255, 255, 0.5)" />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -571,10 +571,10 @@ export default function HomeScreen() {
             onPress={() => router.push('/diseases' as any)}
           >
             <View style={styles.featureIconContainer}>
-              <Ionicons name="bug" size={28} color="#333" />
+              <Ionicons name="bug" size={28} color="#E57373" />
             </View>
             <Text style={styles.featureText}>Sâu hại và Bệnh cây trồng</Text>
-            <Ionicons name="chevron-forward" size={24} color="#666" />
+            <Ionicons name="chevron-forward" size={24} color="rgba(255, 255, 255, 0.5)" />
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -1021,7 +1021,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   weatherCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     marginHorizontal: 15,
     marginTop: 15,
     borderRadius: 20,
@@ -1030,7 +1030,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.4)',
+    borderColor: 'rgba(255, 255, 255, 0.22)',
   },
   weatherLeft: {
     flex: 1,
@@ -1070,7 +1070,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   locationCard: {
-    backgroundColor: '#FFF3E0',
+    backgroundColor: 'rgba(255, 152, 0, 0.08)',
     marginHorizontal: 15,
     marginTop: 10,
     borderRadius: 15,
@@ -1079,12 +1079,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#FFE0B2',
-    shadowColor: '#FF9800',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    borderColor: 'rgba(255, 152, 0, 0.3)',
   },
   locationContent: {
     flexDirection: 'row',
@@ -1095,10 +1090,12 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: '#FFE0B2',
+    backgroundColor: 'rgba(255, 152, 0, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 152, 0, 0.25)',
   },
   locationTextContainer: {
     flex: 1,
@@ -1106,12 +1103,12 @@ const styles = StyleSheet.create({
   locationTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#333',
+    color: '#FFF',
     marginBottom: 4,
   },
   locationSubtitle: {
     fontSize: 13,
-    color: '#666',
+    color: 'rgba(255, 255, 255, 0.7)',
     lineHeight: 18,
   },
   locationText: {
@@ -1144,18 +1141,13 @@ const styles = StyleSheet.create({
     color: '#FFF',
   },
   guideCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 15,
     padding: 16,
     marginHorizontal: 20,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.4)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
   },
   guideHeader: {
     flexDirection: 'row',
@@ -1191,7 +1183,7 @@ const styles = StyleSheet.create({
   weatherLoadingText: {
     marginTop: 12,
     fontSize: 14,
-    color: '#666',
+    color: 'rgba(255, 255, 255, 0.7)',
   },
   weatherErrorContainer: {
     flex: 1,
@@ -1202,7 +1194,7 @@ const styles = StyleSheet.create({
   weatherErrorTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#666',
+    color: 'rgba(255, 255, 255, 0.7)',
     marginTop: 12,
     marginBottom: 16,
   },
@@ -1223,11 +1215,13 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   diseaseSection: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     padding: 20,
     marginTop: 15,
     marginHorizontal: 15,
     borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
   },
   sectionTitle: {
     fontSize: 20,
@@ -1248,7 +1242,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 15,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 10,
@@ -1272,14 +1266,12 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   captureButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    backgroundColor: '#10b981',
     borderRadius: 30,
     paddingVertical: 18,
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.4)',
   },
   captureButtonText: {
     color: '#fff',
@@ -1302,21 +1294,25 @@ const styles = StyleSheet.create({
     paddingBottom: 80,
   },
   featureCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 20,
     padding: 20,
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
   },
   featureIconContainer: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   featureText: {
     fontSize: 15,
@@ -1331,27 +1327,27 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    backgroundColor: '#10b981',
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 8,
-    shadowColor: '#000',
+    shadowColor: '#10b981',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
-    shadowRadius: 4.65,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.4)',
+    shadowRadius: 5,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.65)',
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: '#16161A',
     borderTopLeftRadius: 25,
     borderTopRightRadius: 25,
     maxHeight: '90%',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -1360,12 +1356,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#333',
+    color: '#FFF',
   },
   modalBody: {
     padding: 20,
@@ -1423,14 +1419,11 @@ const styles = StyleSheet.create({
     bottom: 20,
     left: 20,
     right: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    backgroundColor: 'rgba(22, 22, 26, 0.95)',
     borderRadius: 15,
     padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
   },
   bboxInfoHeader: {
     flexDirection: 'row',
@@ -1441,28 +1434,28 @@ const styles = StyleSheet.create({
   bboxInfoTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#333',
+    color: '#FFF',
   },
   bboxInfoText: {
     fontSize: 14,
-    color: '#666',
+    color: '#E0E0E0',
     marginBottom: 6,
     fontFamily: 'monospace',
   },
   bboxInfoSubtext: {
     fontSize: 13,
-    color: '#4CAF50',
+    color: '#81C784',
     fontWeight: '600',
   },
   bboxCoordinates: {
     marginVertical: 8,
     padding: 10,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 8,
   },
   bboxCoordText: {
     fontSize: 14,
-    color: '#333',
+    color: '#FFF',
     fontFamily: 'monospace',
     fontWeight: '600',
     flex: 1,
@@ -1476,26 +1469,26 @@ const styles = StyleSheet.create({
   },
   bboxCoordLabel: {
     fontSize: 14,
-    color: '#666',
+    color: 'rgba(255, 255, 255, 0.6)',
     fontWeight: '500',
   },
   bboxDimensions: {
     marginTop: 8,
     padding: 8,
-    backgroundColor: '#E8F5E9',
+    backgroundColor: 'rgba(76, 175, 80, 0.15)',
     borderRadius: 8,
     borderLeftWidth: 3,
     borderLeftColor: '#4CAF50',
   },
   bboxDimensionText: {
     fontSize: 13,
-    color: '#2E7D32',
+    color: '#81C784',
     fontWeight: '600',
   },
   zoomDoneButton: {
     position: 'absolute',
     bottom: 40,
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#10b981',
     paddingHorizontal: 40,
     paddingVertical: 15,
     borderRadius: 25,
@@ -1511,13 +1504,13 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   healthyCard: {
-    backgroundColor: '#E8F5E9',
-    borderWidth: 2,
+    backgroundColor: 'rgba(76, 175, 80, 0.15)',
+    borderWidth: 1,
     borderColor: '#4CAF50',
   },
   diseaseCard: {
-    backgroundColor: '#FFEBEE',
-    borderWidth: 2,
+    backgroundColor: 'rgba(255, 107, 53, 0.15)',
+    borderWidth: 1,
     borderColor: '#FF6B35',
   },
   resultHeader: {
@@ -1531,13 +1524,13 @@ const styles = StyleSheet.create({
   },
   resultLabel: {
     fontSize: 14,
-    color: '#666',
+    color: 'rgba(255, 255, 255, 0.6)',
     marginBottom: 4,
   },
   resultDiseaseName: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#333',
+    color: '#FFF',
   },
   confidenceBar: {
     flexDirection: 'row',
@@ -1547,16 +1540,16 @@ const styles = StyleSheet.create({
   },
   confidenceLabel: {
     fontSize: 14,
-    color: '#666',
+    color: 'rgba(255, 255, 255, 0.6)',
   },
   confidenceValue: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#333',
+    color: '#FFF',
   },
   progressBar: {
     height: 8,
-    backgroundColor: '#E0E0E0',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 4,
     overflow: 'hidden',
   },
@@ -1565,20 +1558,22 @@ const styles = StyleSheet.create({
     backgroundColor: '#4CAF50',
   },
   infoSection: {
-    backgroundColor: '#F5F5F5',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     padding: 15,
     borderRadius: 12,
     marginBottom: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   infoTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#333',
+    color: '#FFF',
     marginBottom: 10,
   },
   infoText: {
     fontSize: 14,
-    color: '#666',
+    color: '#E0E0E0',
     lineHeight: 22,
   },
   probabilityRow: {
@@ -1586,11 +1581,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
   },
   probabilityLabel: {
     fontSize: 14,
-    color: '#333',
+    color: '#FFF',
   },
   probabilityValue: {
     fontSize: 14,
@@ -1598,7 +1593,7 @@ const styles = StyleSheet.create({
     color: '#2196F3',
   },
   detailButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#10b981',
     borderRadius: 25,
     paddingVertical: 15,
     alignItems: 'center',
@@ -1613,12 +1608,14 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   closeButton: {
-    backgroundColor: '#2196F3',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
     borderRadius: 25,
     paddingVertical: 15,
     alignItems: 'center',
     marginTop: 10,
     marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
   },
   closeButtonText: {
     color: '#fff',
@@ -1638,9 +1635,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     padding: 15,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 12,
     marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   summaryItem: {
     flexDirection: 'row',
@@ -1650,19 +1649,16 @@ const styles = StyleSheet.create({
   summaryText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: '#FFF',
   },
   batchResultItem: {
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 15,
     padding: 15,
     marginBottom: 15,
     flexDirection: 'row',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   batchResultImage: {
     width: 100,
@@ -1694,12 +1690,12 @@ const styles = StyleSheet.create({
   batchResultName: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#333',
+    color: '#FFF',
     flex: 1,
   },
   batchResultConfidence: {
     fontSize: 14,
-    color: '#666',
+    color: '#E0E0E0',
     marginBottom: 8,
   },
   batchDetailButton: {
@@ -1710,7 +1706,7 @@ const styles = StyleSheet.create({
   },
   batchDetailButtonText: {
     fontSize: 14,
-    color: '#4CAF50',
+    color: '#81C784',
     fontWeight: '600',
   },
   batchErrorText: {
@@ -1726,21 +1722,23 @@ const styles = StyleSheet.create({
   batchLoadingText: {
     marginTop: 15,
     fontSize: 16,
-    color: '#666',
+    color: 'rgba(255, 255, 255, 0.7)',
   },
   batchProcessingIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 12,
-    backgroundColor: '#E8F5E9',
+    backgroundColor: 'rgba(76, 175, 80, 0.15)',
     borderRadius: 10,
     marginBottom: 15,
     gap: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(76, 175, 80, 0.3)',
   },
   batchProcessingText: {
     fontSize: 14,
-    color: '#4CAF50',
+    color: '#81C784',
     fontWeight: '600',
   },
   loadingOverlay: {
@@ -1753,14 +1751,11 @@ const styles = StyleSheet.create({
   singleLoadingContent: {
     width: '90%',
     maxWidth: 400,
-    backgroundColor: '#fff',
+    backgroundColor: '#16161A',
     borderRadius: 20,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   loadingImage: {
     width: '100%',
@@ -1774,13 +1769,13 @@ const styles = StyleSheet.create({
   loadingTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#333',
+    color: '#FFF',
     marginTop: 20,
     marginBottom: 8,
   },
   loadingSubtitle: {
     fontSize: 14,
-    color: '#666',
+    color: 'rgba(255, 255, 255, 0.7)',
     textAlign: 'center',
   },
 });

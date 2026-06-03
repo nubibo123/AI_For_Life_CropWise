@@ -63,10 +63,10 @@ const styles = StyleSheet.create({
     height: 320,
     borderRadius: 24,
     overflow: 'hidden',
-    backgroundColor: '#0f172a',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: 'rgba(148, 163, 184, 0.4)',
+    borderColor: 'rgba(255, 255, 255, 0.12)',
   },
   gridBackground: {
     flex: 1,
@@ -90,17 +90,17 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.25)',
+    backgroundColor: 'rgba(0,0,0,0.4)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   overlayBadge: {
-    backgroundColor: 'rgba(17, 24, 39, 0.85)',
+    backgroundColor: 'rgba(20, 10, 40, 0.85)',
     paddingHorizontal: 24,
     paddingVertical: 18,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderColor: 'rgba(255,255,255,0.18)',
   },
   overlayTitle: {
     color: '#f3f4f6',

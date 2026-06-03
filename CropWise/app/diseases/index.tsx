@@ -41,7 +41,7 @@ export default function MaizeDiseasesScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
 
       {/* Header */}
       <View style={styles.header}>
@@ -49,7 +49,7 @@ export default function MaizeDiseasesScreen() {
           style={styles.backButton}
           onPress={() => router.back()}
         >
-          <Ionicons name="arrow-back" size={24} color="#000" />
+          <Ionicons name="arrow-back" size={24} color="#FFF" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Bệnh Cây Ngô</Text>
         <View style={{ width: 24 }} />
@@ -57,17 +57,17 @@ export default function MaizeDiseasesScreen() {
 
       {/* Search Bar */}
       <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
+        <Ionicons name="search" size={20} color="rgba(255, 255, 255, 0.6)" style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
           placeholder="Tìm kiếm bệnh..."
-          placeholderTextColor="#999"
+          placeholderTextColor="rgba(255, 255, 255, 0.4)"
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
         {searchQuery.length > 0 && (
           <TouchableOpacity onPress={() => setSearchQuery('')}>
-            <Ionicons name="close-circle" size={20} color="#999" />
+            <Ionicons name="close-circle" size={20} color="rgba(255, 255, 255, 0.6)" />
           </TouchableOpacity>
         )}
       </View>
@@ -114,20 +114,20 @@ export default function MaizeDiseasesScreen() {
               </Text>
               <View style={styles.diseaseFooter}>
                 <View style={styles.infoItem}>
-                  <Ionicons name="alert-circle-outline" size={16} color="#666" />
+                  <Ionicons name="alert-circle-outline" size={16} color="rgba(255, 255, 255, 0.5)" />
                   <Text style={styles.infoText}>
                     {disease.symptoms.length} triệu chứng
                   </Text>
                 </View>
                 <View style={styles.infoItem}>
-                  <Ionicons name="medical-outline" size={16} color="#666" />
+                  <Ionicons name="medical-outline" size={16} color="rgba(255, 255, 255, 0.5)" />
                   <Text style={styles.infoText}>
                     {disease.treatment.length} cách điều trị
                   </Text>
                 </View>
               </View>
             </View>
-            <Ionicons name="chevron-forward" size={24} color="#ccc" />
+            <Ionicons name="chevron-forward" size={24} color="rgba(255, 255, 255, 0.4)" />
           </TouchableOpacity>
         ))}
 
@@ -204,16 +204,13 @@ const styles = StyleSheet.create({
   },
   diseaseCard: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 16,
     padding: 12,
     marginBottom: 12,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
   },
   diseaseImage: {
     width: 80,
@@ -250,7 +247,7 @@ const styles = StyleSheet.create({
   },
   diseaseNameEn: {
     fontSize: 12,
-    color: '#666',
+    color: 'rgba(255, 255, 255, 0.5)',
     fontStyle: 'italic',
     marginBottom: 6,
   },
@@ -281,12 +278,12 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#666',
+    color: 'rgba(255, 255, 255, 0.6)',
     marginTop: 16,
   },
   emptySubtext: {
     fontSize: 14,
-    color: '#999',
+    color: 'rgba(255, 255, 255, 0.4)',
     marginTop: 8,
   },
 });

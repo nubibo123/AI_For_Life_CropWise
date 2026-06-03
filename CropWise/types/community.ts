@@ -43,6 +43,7 @@ export interface Post {
   userDisliked?: boolean; // Người dùng hiện tại đã dislike chưa
   voteCount?: number;
   bestAnswerId?: string | null;
+  hasExpertComment?: boolean;
 }
 
 export interface CreatePostRequest {

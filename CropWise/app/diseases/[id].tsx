@@ -212,7 +212,7 @@ export default function DiseaseDetailScreen() {
               <Ionicons 
                 name="medical" 
                 size={20} 
-                color={activeTab === 'treatment' ? '#4CAF50' : '#999'} 
+                color={activeTab === 'treatment' ? '#81C784' : 'rgba(255, 255, 255, 0.4)'} 
               />
               <Text style={[
                 styles.tabText,
@@ -234,7 +234,7 @@ export default function DiseaseDetailScreen() {
               <Ionicons 
                 name="shield-checkmark" 
                 size={20} 
-                color={activeTab === 'prevention' ? '#FF9800' : '#999'} 
+                color={activeTab === 'prevention' ? '#FFB74D' : 'rgba(255, 255, 255, 0.4)'} 
               />
               <Text style={[
                 styles.tabText,
@@ -366,15 +366,12 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   section: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
   },
   rowSection: {
     flexDirection: 'row',
@@ -383,14 +380,11 @@ const styles = StyleSheet.create({
   },
   halfSection: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 16,
     padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -431,7 +425,7 @@ const styles = StyleSheet.create({
   tabContainer: {
     flexDirection: 'row',
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
     marginBottom: 16,
   },
   tab: {
@@ -444,19 +438,19 @@ const styles = StyleSheet.create({
   },
   activeTab: {
     borderBottomWidth: 3,
-    borderBottomColor: '#4CAF50',
+    borderBottomColor: '#81C784',
   },
   tabText: {
     fontSize: 16,
     fontWeight: '600',
-    color: 'rgba(255,255,255,0.6)',
+    color: 'rgba(255, 255, 255, 0.4)',
   },
   activeTabText: {
     color: '#FFF',
   },
   tabDivider: {
     width: 1,
-    backgroundColor: '#E0E0E0',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   tabContent: {
     paddingTop: 4,

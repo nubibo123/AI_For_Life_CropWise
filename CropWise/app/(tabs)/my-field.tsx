@@ -21,6 +21,7 @@ import { FieldCard } from '../../components/my-field/FieldCard';
 import { HealthMap, HeatCell, ScanStatus } from '../../components/my-field/HealthMap';
 import { OutbreakMap } from '../../components/my-field/OutbreakMap';
 import { ScanButton } from '../../components/my-field/ScanButton';
+import GlassCard from '../../components/ui/GlassCard';
 import { useAuth } from '../../contexts/AuthContext';
 import { addField, CreateFieldInput, getMyFields, updateFieldScan } from '../../services/fieldService';
 import { createOutbreakAlert, OutbreakUtils, subscribeToOutbreakAlerts } from '../../services/outbreakService';
@@ -103,9 +104,15 @@ export default function MyFieldScreen() {
   );
 
   useEffect(() => {
-    const unsubscribe = subscribeToOutbreakAlerts((alerts) => setOutbreaks(alerts));
+    const unsubscribe = subscribeToOutbreakAlerts(
+      (alerts) => setOutbreaks(alerts),
+      (error) => {
+        console.warn('Unable to subscribe to outbreak alerts:', error.message);
+      }
+    );
     return unsubscribe;
   }, []);
+
 
   const fetchFields = useCallback(async () => {
     if (!user) return;
@@ -395,7 +402,7 @@ export default function MyFieldScreen() {
                 {outbreaks.map((alert) => {
                   const within = isWithinAlert(alert);
                   return (
-                    <View key={alert.id} style={styles.alertCard}>
+                    <GlassCard intensity={15} key={alert.id} style={styles.alertCard}>
                       <View style={styles.alertCardHeader}>
                         <Text style={styles.alertTitle}>{alert.title}</Text>
                         <View
@@ -408,7 +415,18 @@ export default function MyFieldScreen() {
                               : styles.severityLow,
                           ]}
                         >
-                          <Text style={styles.severityPillText}>{severityLabels[alert.severity]}</Text>
+                          <Text
+                            style={[
+                              styles.severityPillText,
+                              alert.severity === 'high'
+                                ? { color: '#E57373' }
+                                : alert.severity === 'medium'
+                                ? { color: '#FFD54F' }
+                                : { color: '#81C784' },
+                            ]}
+                          >
+                            {severityLabels[alert.severity]}
+                          </Text>
                         </View>
                       </View>
                       <Text style={styles.alertDescription}>{alert.description}</Text>
@@ -421,13 +439,13 @@ export default function MyFieldScreen() {
                       </Text>
                       {within && (
                         <View style={styles.alertWarning}>
-                          <AlertTriangle size={16} color="#b91c1c" />
+                          <AlertTriangle size={16} color="#ef4444" />
                           <Text style={styles.alertWarningText}>
                             Ruộng của bạn nằm trong vùng cảnh báo
                           </Text>
                         </View>
                       )}
-                    </View>
+                    </GlassCard>
                   );
                 })}
               </>
@@ -441,7 +459,7 @@ export default function MyFieldScreen() {
             />
 
             {resultVisible && scanSummary && (
-              <View style={styles.resultCard}>
+              <GlassCard intensity={20} style={styles.resultCard}>
                 <Text style={styles.resultTitle}>
                   {scanSummary.label}: {scanSummary.score}%
                 </Text>
@@ -455,7 +473,7 @@ export default function MyFieldScreen() {
                 <TouchableOpacity style={styles.outlineButton} onPress={() => router.push('/diseases')}>
                   <Text style={styles.outlineButtonText}>Xem phác đồ xử lý</Text>
                 </TouchableOpacity>
-              </View>
+              </GlassCard>
             )}
           </ScrollView>
 
@@ -525,12 +543,13 @@ const WeatherWidget: React.FC<{
   loading: boolean;
   rainAlert: boolean;
 }> = ({ weather, loading, rainAlert }) => (
-  <View
+  <GlassCard
+    intensity={15}
     style={[
       styles.weatherCard,
       rainAlert && {
         borderColor: '#ef4444',
-        backgroundColor: 'rgba(239, 68, 68, 0.08)',
+        backgroundColor: 'rgba(239, 68, 68, 0.15)',
       },
     ]}
   >
@@ -557,7 +576,7 @@ const WeatherWidget: React.FC<{
             <Text
               style={[
                 styles.weatherMetricText,
-                rainAlert && { color: '#b91c1c', fontWeight: '700' },
+                rainAlert && { color: '#ef4444', fontWeight: '700' },
               ]}
             >
               Mưa dự báo: {(weather.rainVolume ?? 0).toFixed(1)} mm
@@ -570,7 +589,7 @@ const WeatherWidget: React.FC<{
     ) : (
       <Text style={styles.weatherSubtitle}>Không lấy được dữ liệu thời tiết.</Text>
     )}
-  </View>
+  </GlassCard>
 );
 
 type FieldModalProps = {
@@ -631,6 +650,7 @@ const FieldModal: React.FC<FieldModalProps> = ({
             <Text style={styles.inputLabel}>Tên ruộng</Text>
             <TextInput
               placeholder="VD: Ruộng Bãi Bồi"
+              placeholderTextColor="rgba(255, 255, 255, 0.4)"
               style={styles.input}
               value={formState.name}
               onChangeText={(name) => setFormState((prev) => ({ ...prev, name }))}
@@ -639,6 +659,7 @@ const FieldModal: React.FC<FieldModalProps> = ({
             <Text style={styles.inputLabel}>Giống cây</Text>
             <TextInput
               placeholder="VD: Ngô NK7328"
+              placeholderTextColor="rgba(255, 255, 255, 0.4)"
               style={styles.input}
               value={formState.cropType}
               onChangeText={(cropType) => setFormState((prev) => ({ ...prev, cropType }))}
@@ -647,6 +668,7 @@ const FieldModal: React.FC<FieldModalProps> = ({
             <Text style={styles.inputLabel}>Diện tích (m²)</Text>
             <TextInput
               placeholder="VD: 5000"
+              placeholderTextColor="rgba(255, 255, 255, 0.4)"
               keyboardType="numeric"
               style={styles.input}
               value={formState.area}
@@ -752,6 +774,7 @@ const OutbreakModal: React.FC<OutbreakModalProps> = ({
             <Text style={styles.inputLabel}>Tiêu đề cảnh báo</Text>
             <TextInput
               placeholder="VD: Ổ dịch đốm lá đang lan nhanh"
+              placeholderTextColor="rgba(255, 255, 255, 0.4)"
               style={styles.input}
               value={formState.title}
               onChangeText={(title) => {
@@ -763,6 +786,7 @@ const OutbreakModal: React.FC<OutbreakModalProps> = ({
             <Text style={styles.inputLabel}>Mô tả chi tiết</Text>
             <TextInput
               placeholder="Chia sẻ thêm về triệu chứng, phạm vi phát hiện..."
+              placeholderTextColor="rgba(255, 255, 255, 0.4)"
               style={[styles.input, { minHeight: 100, textAlignVertical: 'top' }]}
               value={formState.description}
               onChangeText={(description) => {
@@ -777,10 +801,24 @@ const OutbreakModal: React.FC<OutbreakModalProps> = ({
             <View style={styles.severityRow}>
               {severityOptions.map((option) => {
                 const active = formState.severity === option.value;
+                const activeStyle = active ? [
+                  styles.severityOptionActive,
+                  option.value === 'low' && { borderColor: '#81C784', backgroundColor: 'rgba(129, 199, 132, 0.15)' },
+                  option.value === 'medium' && { borderColor: '#FFD54F', backgroundColor: 'rgba(255, 213, 79, 0.15)' },
+                  option.value === 'high' && { borderColor: '#E57373', backgroundColor: 'rgba(229, 115, 115, 0.15)' },
+                ] : null;
+
+                const activeTextStyle = active ? [
+                  styles.severityOptionTextActive,
+                  option.value === 'low' && { color: '#81C784' },
+                  option.value === 'medium' && { color: '#FFD54F' },
+                  option.value === 'high' && { color: '#E57373' },
+                ] : null;
+
                 return (
                   <TouchableOpacity
                     key={option.value}
-                    style={[styles.severityOption, active && styles.severityOptionActive]}
+                    style={[styles.severityOption, activeStyle]}
                     onPress={() => {
                       setFormState((prev) => ({ ...prev, severity: option.value }));
                       onClearError();
@@ -789,7 +827,7 @@ const OutbreakModal: React.FC<OutbreakModalProps> = ({
                     <Text
                       style={[
                         styles.severityOptionText,
-                        active && styles.severityOptionTextActive,
+                        activeTextStyle,
                       ]}
                     >
                       {option.label}
@@ -802,6 +840,7 @@ const OutbreakModal: React.FC<OutbreakModalProps> = ({
             <Text style={styles.inputLabel}>Bán kính cảnh báo (m)</Text>
             <TextInput
               placeholder="VD: 1500"
+              placeholderTextColor="rgba(255, 255, 255, 0.4)"
               keyboardType="numeric"
               style={styles.input}
               value={formState.radius}
@@ -852,7 +891,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   addButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
@@ -860,18 +899,15 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     gap: 6,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.4)',
+    borderColor: 'rgba(255, 255, 255, 0.22)',
   },
   addButtonText: {
-    color: '#047857',
+    color: '#81C784',
     fontWeight: '600',
   },
   weatherCard: {
     borderRadius: 20,
     padding: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 20,
@@ -919,34 +955,25 @@ const styles = StyleSheet.create({
   },
   weatherAlert: {
     marginTop: 12,
-    color: '#b91c1c',
+    color: '#ef4444',
     fontWeight: '700',
   },
   alertListHeader: {
     marginBottom: 8,
   },
   alertListSubtitle: {
-    color: '#E0E0E0',
+    color: 'rgba(255, 255, 255, 0.65)',
     marginTop: 4,
   },
   alertCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
     padding: 16,
     marginBottom: 14,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
+    borderRadius: 16,
   },
   alertCardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
   },
   alertTitle: {
     fontSize: 16,
@@ -975,27 +1002,32 @@ const styles = StyleSheet.create({
   severityPillText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#0f172a',
   },
   severityLow: {
-    backgroundColor: 'rgba(34,197,94,0.2)',
+    backgroundColor: 'rgba(129, 199, 132, 0.15)',
+    borderColor: 'rgba(129, 199, 132, 0.3)',
+    borderWidth: 1,
   },
   severityMedium: {
-    backgroundColor: 'rgba(250,204,21,0.25)',
+    backgroundColor: 'rgba(255, 213, 79, 0.15)',
+    borderColor: 'rgba(255, 213, 79, 0.3)',
+    borderWidth: 1,
   },
   severityHigh: {
-    backgroundColor: 'rgba(239,68,68,0.2)',
+    backgroundColor: 'rgba(229, 115, 115, 0.15)',
+    borderColor: 'rgba(229, 115, 115, 0.3)',
+    borderWidth: 1,
   },
   alertDescription: {
     color: '#E0E0E0',
     marginBottom: 6,
   },
   alertMeta: {
-    color: '#94a3b8',
+    color: '#cbd5e1',
     fontSize: 13,
   },
   alertMetaSecondary: {
-    color: '#94a3b8',
+    color: '#cbd5e1',
     fontSize: 12,
     marginTop: 2,
     marginBottom: 10,
@@ -1004,20 +1036,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(239,68,68,0.08)',
+    backgroundColor: 'rgba(239, 68, 68, 0.12)',
     padding: 10,
     borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.3)',
   },
   alertWarningText: {
-    color: '#b91c1c',
+    color: '#FF8A80',
     fontWeight: '600',
   },
   resultCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 20,
     padding: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   resultTitle: {
     fontSize: 20,
@@ -1025,7 +1056,7 @@ const styles = StyleSheet.create({
     color: '#FFF',
   },
   resultSubtitle: {
-    color: '#475569',
+    color: 'rgba(255, 255, 255, 0.7)',
     marginTop: 6,
     marginBottom: 12,
   },
@@ -1036,17 +1067,15 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   issueText: {
-    color: '#b91c1c',
+    color: '#ff6b6b',
     fontWeight: '600',
   },
   outlineButton: {
     marginTop: 14,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.4)',
     borderRadius: 999,
     paddingVertical: 12,
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   outlineButtonText: {
     fontWeight: '700',
@@ -1065,7 +1094,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: 12,
-    color: '#475569',
+    color: 'rgba(255, 255, 255, 0.7)',
   },
   emptyContainer: {
     flex: 1,
@@ -1082,21 +1111,21 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 24,
     fontWeight: '800',
-    color: '#0f172a',
+    color: '#FFF',
   },
   emptyDescription: {
     textAlign: 'center',
-    color: '#475569',
+    color: 'rgba(255, 255, 255, 0.7)',
     marginVertical: 12,
   },
   primaryButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    backgroundColor: '#10b981',
     borderRadius: 999,
     paddingHorizontal: 32,
     paddingVertical: 14,
     marginTop: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   primaryButtonText: {
     color: '#fff',
@@ -1105,14 +1134,16 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: 'rgba(0,0,0,0.65)',
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: '#16161A',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: '90%',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -1120,14 +1151,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: '700',
+    color: '#FFF',
   },
   modalClose: {
-    color: '#0f172a',
+    color: 'rgba(255, 255, 255, 0.65)',
     fontWeight: '600',
   },
   modalBody: {
@@ -1137,31 +1169,34 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#475569',
+    color: 'rgba(255, 255, 255, 0.7)',
   },
   input: {
     borderWidth: 1,
-    borderColor: '#cbd5f5',
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 12,
     padding: 12,
     marginBottom: 8,
+    color: '#FFF',
   },
   dateInput: {
     borderWidth: 1,
-    borderColor: '#cbd5f5',
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 12,
     padding: 12,
   },
   dateText: {
     fontWeight: '600',
-    color: '#0f172a',
+    color: '#FFF',
   },
   miniMapWrapper: {
     height: 180,
     borderRadius: 16,
     overflow: 'hidden',
     marginTop: 8,
-    backgroundColor: '#e2e8f0',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
   },
   severityRow: {
     flexDirection: 'row',
@@ -1173,7 +1208,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#cbd5f5',
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
     alignItems: 'center',
   },
   severityOptionActive: {
@@ -1181,14 +1217,14 @@ const styles = StyleSheet.create({
     borderColor: '#ef4444',
   },
   severityOptionText: {
-    color: '#475569',
+    color: 'rgba(255, 255, 255, 0.5)',
     fontWeight: '600',
   },
   severityOptionTextActive: {
-    color: '#b91c1c',
+    color: '#FFF',
   },
   errorText: {
-    color: '#b91c1c',
+    color: '#ff6b6b',
     marginTop: 6,
   },
 });

@@ -148,8 +148,23 @@ export const createNotification = async (
       isRead: false,
       createdAt: serverTimestamp(),
     });
-    const docSnap = await getDoc(ref);
-    return docSnap ? mapNotification(docSnap.id, docSnap.data()) : null;
+    
+    // Do not call getDoc(ref) because the creator (actorId) does not have read
+    // permissions on the recipient's notification document.
+    // Instead, return a locally constructed Notification object.
+    return {
+      id: ref.id,
+      recipientId: notification.recipientId,
+      actorId: notification.actorId ?? '',
+      type: notification.type,
+      title: notification.title,
+      message: notification.message,
+      postId: notification.postId,
+      commentId: notification.commentId,
+      imageUrl: notification.imageUrl,
+      isRead: false,
+      createdAt: new Date().toISOString(),
+    };
   } catch (error) {
     console.error('Error creating notification:', error);
     return null;

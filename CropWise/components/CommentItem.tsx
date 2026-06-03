@@ -1,5 +1,5 @@
 /**
- * Component hiển thị một bình luận/phản hồi
+ * Component hiển thị một bình luận/phản hồi trong giao diện kính mờ (Glassmorphism)
  */
 
 import { Ionicons } from '@expo/vector-icons';
@@ -12,13 +12,13 @@ import {
   View,
 } from 'react-native';
 import { Comment } from '../types/community';
+import GlassCard from './ui/GlassCard';
 
 interface CommentItemProps {
   comment: Comment;
   postId: string;
   onLike?: (postId: string, commentId: string) => void;
   onDislike?: (postId: string, commentId: string) => void;
-  // New props for voting and best answer
   onUpvote?: (postId: string, commentId: string) => void;
   onDownvote?: (postId: string, commentId: string) => void;
   canMarkBest?: boolean;
@@ -42,41 +42,24 @@ const formatTimeAgo = (dateString: string | undefined): string => {
   const diffDays = Math.floor(diffHours / 24);
 
   if (diffDays > 0) {
-    return `${diffDays} d`;
+    return `${diffDays} ngày trước`;
   } else if (diffHours > 0) {
-    return `${diffHours} h`;
+    return `${diffHours} giờ trước`;
   } else {
     const diffMinutes = Math.floor(diffMs / (1000 * 60));
-    return `${diffMinutes} m`;
+    return `${diffMinutes > 0 ? diffMinutes : 1} phút trước`;
   }
 };
 
 export const CommentItem: React.FC<CommentItemProps> = ({
   comment,
   postId,
-  onLike,
-  onDislike,
   onUpvote,
   onDownvote,
   canMarkBest,
   isBestAnswer,
   onMarkBest,
 }) => {
-  const userLiked = (comment as any).userLiked || false;
-  const userDisliked = (comment as any).userDisliked || false;
-
-  const handleLike = () => {
-    if (onLike) {
-      onLike(postId, comment.id);
-    }
-  };
-
-  const handleDislike = () => {
-    if (onDislike) {
-      onDislike(postId, comment.id);
-    }
-  };
-
   const handleUpvote = () => {
     if (onUpvote) onUpvote(postId, comment.id);
   };
@@ -90,153 +73,151 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   };
 
   return (
-    <View style={[
-      styles.container,
-      isBestAnswer ? styles.bestAnswerContainer : undefined,
-    ]}>
-      {/* Thông tin người bình luận */}
-      <View style={styles.userInfo}>
-        <View style={styles.avatarContainer}>
-          {comment.user.avatarUrl ? (
-            <Image
-              source={{ uri: comment.user.avatarUrl }}
-              style={styles.avatar}
-            />
-          ) : (
-            <View style={styles.avatarPlaceholder}>
-              <Ionicons name="person" size={18} color="#666" />
+    <View style={styles.outerContainer}>
+      <GlassCard 
+        intensity={comment.user.isExpert ? 35 : isBestAnswer ? 40 : 20} 
+        style={[
+          styles.container,
+          isBestAnswer ? styles.bestAnswerContainer : undefined,
+          comment.user.isExpert ? styles.expertCommentContainer : undefined,
+        ]}
+      >
+        {comment.user.isExpert && (
+          <View style={styles.expertBadgeTop}>
+            <Ionicons name="ribbon-outline" size={14} color="#FFF" />
+            <Text style={styles.expertBadgeTopText}>Ý KIẾN CHUYÊN GIA</Text>
+          </View>
+        )}
+        
+        {/* Thông tin người bình luận */}
+        <View style={styles.userInfo}>
+          <View style={styles.avatarContainer}>
+            {comment.user.avatarUrl ? (
+              <Image
+                source={{ uri: comment.user.avatarUrl }}
+                style={styles.avatar}
+              />
+            ) : (
+              <View style={styles.avatarPlaceholder}>
+                <Ionicons name="person" size={18} color="rgba(255, 255, 255, 0.7)" />
+              </View>
+            )}
+          </View>
+          <View style={styles.userDetails}>
+            <View style={styles.userNameRow}>
+              <Text style={[styles.userName, comment.user.isExpert && styles.expertUserName]}>
+                {comment.user.name || 'Người dùng'}
+              </Text>
+              {comment.user.isExpert && (
+                <Ionicons name="checkmark-done-circle" size={16} color="#81C784" style={styles.icon} />
+              )}
+              {comment.user.isModerator && (
+                <Ionicons name="shield-checkmark" size={14} color="#64B5F6" style={styles.icon} />
+              )}
+              {comment.user.reputation !== undefined && comment.user.reputation > 0 && (
+                <View style={styles.reputationBadge}>
+                  <Ionicons name="star" size={10} color="#FFA726" />
+                  <Text style={styles.reputation}>{comment.user.reputation ?? 0}</Text>
+                </View>
+              )}
+            </View>
+            <Text style={styles.timeAgo}>{formatTimeAgo(comment.createdAt)}</Text>
+          </View>
+          <TouchableOpacity style={styles.moreButton}>
+            <Ionicons name="ellipsis-vertical" size={18} color="rgba(255, 255, 255, 0.6)" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Nội dung bình luận */}
+        <View style={styles.content}>
+          <Text style={styles.commentText}>{comment.content || ''}</Text>
+        </View>
+
+        {/* Nút tương tác */}
+        <View style={styles.interactionRow}>
+          {/* Bộ chọn Vote */}
+          <View style={styles.voteSection}>
+            <TouchableOpacity
+              style={styles.voteButton}
+              onPress={handleUpvote}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="arrow-up" size={18} color="rgba(255, 255, 255, 0.8)" />
+            </TouchableOpacity>
+            <Text style={styles.voteCountText}>{comment.voteCount ?? 0}</Text>
+            <TouchableOpacity
+              style={styles.voteButton}
+              onPress={handleDownvote}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="arrow-down" size={18} color="rgba(255, 255, 255, 0.8)" />
+            </TouchableOpacity>
+          </View>
+
+          {/* Nút chọn bài trả lời tốt nhất */}
+          {canMarkBest && !isBestAnswer && (
+            <TouchableOpacity style={styles.bestButton} onPress={handleMarkBest}>
+              <Ionicons name="checkmark-circle-outline" size={18} color="#81C784" />
+              <Text style={styles.bestButtonText}>Tốt nhất</Text>
+            </TouchableOpacity>
+          )}
+          {isBestAnswer && (
+            <View style={styles.bestBadge}>
+              <Ionicons name="checkmark-circle" size={16} color="#81C784" />
+              <Text style={styles.bestBadgeText}>Giải pháp hay nhất</Text>
             </View>
           )}
         </View>
-        <View style={styles.userDetails}>
-          <View style={styles.userNameRow}>
-            <Text style={styles.userName}>{comment.user.name || 'Người dùng'}</Text>
-            {comment.user.isExpert && (
-              <Ionicons name="school" size={14} color="#4CAF50" style={styles.icon} />
-            )}
-            {comment.user.isModerator && (
-              <Ionicons name="settings" size={14} color="#666" style={styles.icon} />
-            )}
-            {comment.user.reputation && comment.user.reputation > 0 && (
-              <>
-                <Ionicons name="star" size={12} color="#FFA726" style={styles.icon} />
-                <Text style={styles.reputation}>{comment.user.reputation ?? 0}</Text>
-              </>
-            )}
-          </View>
-          <Text style={styles.timeAgo}>{formatTimeAgo(comment.createdAt)}</Text>
-        </View>
-        <TouchableOpacity style={styles.moreButton}>
-          <Ionicons name="ellipsis-vertical" size={18} color="#999" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Nội dung bình luận */}
-      <View style={styles.content}>
-        <Text style={styles.commentText}>{comment.content || ''}</Text>
-      </View>
-
-      {/* Dịch */}
-      <TouchableOpacity style={styles.translateButton}>
-        <Text style={styles.translateText}>Dịch</Text>
-      </TouchableOpacity>
-
-      {/* Nút tương tác */}
-      <View style={styles.interactionRow}>
-        {/* Upvote */}
-        <TouchableOpacity
-          style={styles.interactionButton}
-          onPress={handleUpvote}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="arrow-up" size={18} color="#666" />
-        </TouchableOpacity>
-        <Text style={styles.voteCountText}>{comment.voteCount ?? 0}</Text>
-        {/* Downvote */}
-        <TouchableOpacity
-          style={[styles.interactionButton, { marginLeft: 8 }]}
-          onPress={handleDownvote}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="arrow-down" size={18} color="#666" />
-        </TouchableOpacity>
-
-        {/* Legacy like/dislike (optional, kept) */}
-        <View style={{ flexDirection: 'row', marginLeft: 16 }}>
-          <TouchableOpacity
-            style={styles.interactionButton}
-            onPress={handleLike}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name={userLiked ? 'thumbs-up' : 'thumbs-up-outline'}
-              size={18}
-              color={userLiked ? '#1976D2' : '#666'}
-            />
-            <Text
-              style={[
-                styles.interactionCount,
-                userLiked && styles.interactionCountActive,
-              ]}
-            >
-              {comment.likeCount ?? 0}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.interactionButton}
-            onPress={handleDislike}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name={userDisliked ? 'thumbs-down' : 'thumbs-down-outline'}
-              size={18}
-              color={userDisliked ? '#1976D2' : '#666'}
-            />
-            <Text
-              style={[
-                styles.interactionCount,
-                userDisliked && styles.interactionCountActive,
-              ]}
-            >
-              {comment.dislikeCount ?? 0}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Mark as best */}
-        {canMarkBest && !isBestAnswer && (
-          <TouchableOpacity style={styles.bestButton} onPress={handleMarkBest}>
-            <Ionicons name="checkmark-circle-outline" size={18} color="#2e7d32" />
-            <Text style={styles.bestButtonText}>Đánh dấu là hay nhất</Text>
-          </TouchableOpacity>
-        )}
-        {isBestAnswer && (
-          <View style={styles.bestBadge}>
-            <Ionicons name="checkmark-circle" size={16} color="#2e7d32" />
-            <Text style={styles.bestBadgeText}>Hay nhất</Text>
-          </View>
-        )}
-      </View>
+      </GlassCard>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  outerContainer: {
+    marginHorizontal: 16,
+    marginVertical: 6,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
   container: {
-    backgroundColor: '#fff',
-    padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F5F5F5',
+    padding: 14,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
   },
   bestAnswerContainer: {
-    borderWidth: 1,
-    borderColor: '#72C472',
-    borderRadius: 8,
+    borderColor: 'rgba(129, 199, 132, 0.6)',
+    borderWidth: 1.5,
+    backgroundColor: 'rgba(129, 199, 132, 0.08)',
+  },
+  expertCommentContainer: {
+    borderColor: 'rgba(76, 175, 80, 0.6)',
+    borderWidth: 1.5,
+    backgroundColor: 'rgba(76, 175, 80, 0.1)',
+  },
+  expertBadgeTop: {
+    backgroundColor: '#4CAF50',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingVertical: 5,
+    borderRadius: 12,
+    marginBottom: 12,
+    marginHorizontal: -14,
+    marginTop: -14,
+  },
+  expertBadgeTopText: {
+    color: '#FFF',
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 0.5,
   },
   userInfo: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 8,
+    alignItems: 'center',
+    marginBottom: 10,
   },
   avatarContainer: {
     marginRight: 10,
@@ -245,12 +226,14 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
   },
   avatarPlaceholder: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#E3F2FD',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -261,101 +244,115 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flexWrap: 'wrap',
+    gap: 4,
   },
   userName: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#1976D2',
-    marginRight: 4,
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFF',
+  },
+  expertUserName: {
+    color: '#81C784',
   },
   icon: {
-    marginLeft: 4,
-    marginRight: 2,
-  },
-  reputation: {
-    fontSize: 12,
-    color: '#666',
     marginLeft: 2,
   },
+  reputationBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 167, 38, 0.15)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    gap: 2,
+  },
+  reputation: {
+    fontSize: 10,
+    color: '#FFA726',
+    fontWeight: '700',
+  },
   timeAgo: {
-    fontSize: 12,
-    color: '#999',
+    fontSize: 11,
+    color: 'rgba(255, 255, 255, 0.5)',
     marginTop: 2,
   },
   moreButton: {
     padding: 4,
   },
   content: {
-    marginBottom: 8,
+    marginBottom: 12,
+    paddingLeft: 2,
   },
   commentText: {
     fontSize: 14,
-    color: '#333',
-    lineHeight: 20,
+    color: 'rgba(255, 255, 255, 0.95)',
+    lineHeight: 21,
   },
   translateButton: {
     alignSelf: 'flex-start',
     marginBottom: 8,
   },
   translateText: {
-    fontSize: 14,
-    color: '#1976D2',
+    fontSize: 13,
+    color: '#64B5F6',
+    fontWeight: '600',
   },
   interactionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.08)',
+    paddingTop: 10,
   },
-  interactionButton: {
+  voteSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 20,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
   },
-  interactionCount: {
-    fontSize: 14,
-    color: '#666',
-    marginLeft: 6,
-  },
-  interactionCountActive: {
-    color: '#1976D2',
-    fontWeight: '600',
+  voteButton: {
+    padding: 4,
   },
   voteCountText: {
-    fontSize: 14,
-    color: '#333',
-    fontWeight: '600',
-    minWidth: 24,
+    fontSize: 13,
+    color: '#FFF',
+    fontWeight: '700',
+    paddingHorizontal: 6,
     textAlign: 'center',
   },
   bestButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginLeft: 'auto',
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 6,
-    backgroundColor: '#E8F5E9',
+    borderRadius: 20,
+    backgroundColor: 'rgba(129, 199, 132, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(129, 199, 132, 0.3)',
   },
   bestButtonText: {
-    color: '#2e7d32',
-    fontSize: 13,
-    fontWeight: '600',
-    marginLeft: 6,
+    color: '#81C784',
+    fontSize: 12,
+    fontWeight: '700',
+    marginLeft: 4,
   },
   bestBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginLeft: 'auto',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    backgroundColor: '#E8F5E9',
-    borderRadius: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: 'rgba(76, 175, 80, 0.15)',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(76, 175, 80, 0.3)',
   },
   bestBadgeText: {
-    color: '#2e7d32',
+    color: '#81C784',
     fontSize: 12,
     marginLeft: 4,
-    fontWeight: '600',
+    fontWeight: '700',
   },
 });
-

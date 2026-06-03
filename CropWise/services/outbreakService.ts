@@ -118,14 +118,25 @@ export const createOutbreakAlert = async (
 };
 
 export const subscribeToOutbreakAlerts = (
-  callback: (alerts: OutbreakAlert[]) => void
+  callback: (alerts: OutbreakAlert[]) => void,
+  onError?: (error: Error) => void
 ): (() => void) => {
   const outbreaksQuery = query(outbreaksCollection, orderBy('createdAt', 'desc'));
-  return onSnapshot(outbreaksQuery, (snapshot) => {
-    const alerts = snapshot.docs.map((docSnap) => mapOutbreak(docSnap.id, docSnap.data()));
-    callback(alerts);
-  });
+  return onSnapshot(
+    outbreaksQuery,
+    (snapshot) => {
+      const alerts = snapshot.docs.map((docSnap) => mapOutbreak(docSnap.id, docSnap.data()));
+      callback(alerts);
+    },
+    (error) => {
+      console.error('Error in subscribeToOutbreakAlerts:', error);
+      if (onError) {
+        onError(error);
+      }
+    }
+  );
 };
+
 
 export const getOutbreakAlerts = async (): Promise<OutbreakAlert[]> => {
   const alertsQuery = query(outbreaksCollection, orderBy('createdAt', 'desc'));

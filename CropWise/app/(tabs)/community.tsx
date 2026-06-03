@@ -11,6 +11,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Alert,
 } from 'react-native';
 import { PostCard } from '../../components/PostCard';
 import { Post } from '../../types/community';
@@ -129,12 +130,12 @@ export default function CommunityScreen() {
 
       {/* Header với tìm kiếm */}
       <View style={styles.header}>
-        <GlassCard style={styles.searchContainer}>
-          <Ionicons name="search" size={20} color="#E0E0E0" style={styles.searchIcon} />
+        <GlassCard style={styles.searchContainer} intensity={20}>
+          <Ionicons name="search" size={18} color="rgba(255, 255, 255, 0.6)" style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Tìm trong Cộng đồng"
-            placeholderTextColor="#E0E0E0"
+            placeholder="Tìm kiếm trong cộng đồng..."
+            placeholderTextColor="rgba(255, 255, 255, 0.45)"
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
@@ -159,23 +160,19 @@ export default function CommunityScreen() {
         </TouchableOpacity>
       </View>
 
+
       {/* Thanh lọc */}
       <View style={styles.filterSection}>
         <View style={styles.filterHeader}>
-          <Text style={styles.filterLabel}>Lọc theo</Text>
+          <Text style={styles.filterLabel}>Lọc theo cây trồng</Text>
           <TouchableOpacity>
             <Text style={styles.changeButton}>Thay đổi</Text>
           </TouchableOpacity>
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterChips}>
-          <GlassCard style={styles.filterChip}>
-            <Text style={styles.filterChipText}>Đậu gà & Đậu xanh</Text>
-          </GlassCard>
-          <GlassCard style={styles.filterChip}>
-            <Text style={styles.filterChipText}>Đậu tương</Text>
-          </GlassCard>
-          <GlassCard style={styles.filterChip}>
-            <Text style={styles.filterChipText}>Đậu</Text>
+          <GlassCard style={styles.filterChip} intensity={30}>
+            <Ionicons name="leaf" size={14} color="#81C784" style={styles.filterChipIcon} />
+            <Text style={styles.filterChipText}>Ngô</Text>
           </GlassCard>
         </ScrollView>
       </View>
@@ -183,20 +180,22 @@ export default function CommunityScreen() {
       {/* Thanh tạo bài đăng mới */}
       <TouchableOpacity
         onPress={handleCreatePost}
-        activeOpacity={0.7}
+        activeOpacity={0.8}
+        style={styles.createPostWrapper}
       >
-        <GlassCard style={styles.createPostBar}>
-          <View style={styles.createPostContent}>
-            <Ionicons name="create-outline" size={20} color="#4CAF50" />
-            <Text style={styles.createPostText}>Tạo bài đăng mới</Text>
+        <GlassCard style={styles.createPostBar} intensity={20}>
+          <View style={styles.avatarPlaceholderSmall}>
+            <Ionicons name="person" size={14} color="rgba(255, 255, 255, 0.6)" />
           </View>
+          <Text style={styles.createPostText}>Bạn muốn chia sẻ hoặc hỏi đáp gì về ruộng ngô?</Text>
+          <Ionicons name="image-outline" size={18} color="#81C784" />
         </GlassCard>
       </TouchableOpacity>
 
       {/* Danh sách bài đăng */}
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#FFF" />
+          <ActivityIndicator size="large" color="#81C784" />
         </View>
       ) : (
         <FlatList
@@ -215,7 +214,7 @@ export default function CommunityScreen() {
         onPress={handleCreatePost}
         activeOpacity={0.8}
       >
-        <Ionicons name="create" size={24} color="#fff" />
+        <Ionicons name="create" size={20} color="#fff" />
         <Text style={styles.fabText}>Hỏi Cộng đồng</Text>
       </TouchableOpacity>
     </View>
@@ -243,7 +242,9 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    marginRight: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
   },
   searchIcon: {
     marginRight: 8,
@@ -254,33 +255,37 @@ const styles = StyleSheet.create({
     color: '#FFF',
   },
   headerButton: {
-    padding: 4,
+    padding: 6,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 36,
+    height: 36,
   },
   notificationButton: {
     position: 'relative',
   },
   badge: {
     position: 'absolute',
-    top: -4,
-    right: -4,
+    top: -6,
+    right: -6,
     backgroundColor: '#FF5252',
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
+    borderRadius: 8,
+    minWidth: 16,
+    height: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 6,
-    borderWidth: 2,
-    borderColor: 'transparent',
+    paddingHorizontal: 4,
   },
   badgeText: {
     color: '#fff',
-    fontSize: 10,
+    fontSize: 8,
     fontWeight: '700',
   },
   filterSection: {
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 8,
   },
   filterHeader: {
     flexDirection: 'row',
@@ -294,7 +299,7 @@ const styles = StyleSheet.create({
     color: '#FFF',
   },
   changeButton: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#81C784',
     fontWeight: '600',
   },
@@ -307,33 +312,49 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    marginRight: 8,
+    borderWidth: 1.5,
+    borderColor: 'rgba(129, 199, 132, 0.4)',
+    backgroundColor: 'rgba(129, 199, 132, 0.12)',
+  },
+  filterChipIcon: {
+    marginRight: 6,
   },
   filterChipText: {
     fontSize: 14,
-    color: '#FFF',
-    fontWeight: '500',
+    color: '#81C784',
+    fontWeight: '700',
+  },
+  createPostWrapper: {
+    marginHorizontal: 16,
+    marginVertical: 8,
   },
   createPostBar: {
-    marginHorizontal: 16,
-    marginBottom: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderRadius: 15,
-  },
-  createPostContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    gap: 10,
+  },
+  avatarPlaceholderSmall: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   createPostText: {
-    fontSize: 15,
-    color: '#81C784',
-    fontWeight: '600',
+    flex: 1,
+    fontSize: 13,
+    color: 'rgba(255, 255, 255, 0.55)',
   },
   listContent: {
     padding: 16,
-    paddingBottom: 100, // Space for FAB
+    paddingBottom: 160,
   },
   loadingContainer: {
     flex: 1,
@@ -344,41 +365,41 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 100,
+    paddingVertical: 80,
   },
   emptyStateText: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
-    color: '#E0E0E0',
-    marginTop: 20,
+    color: 'rgba(255, 255, 255, 0.65)',
+    marginTop: 16,
   },
   emptyStateSubtext: {
-    fontSize: 14,
-    color: '#B0B0B0',
-    marginTop: 8,
+    fontSize: 13,
+    color: 'rgba(255, 255, 255, 0.4)',
+    marginTop: 6,
   },
   fab: {
     position: 'absolute',
     bottom: 80,
     right: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    backgroundColor: 'rgba(76, 175, 80, 0.35)',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 18,
     paddingVertical: 12,
-    borderRadius: 25,
+    borderRadius: 24,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.2,
     shadowRadius: 6,
-    elevation: 8,
-    gap: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.4)',
+    elevation: 6,
+    gap: 6,
+    borderWidth: 1.5,
+    borderColor: 'rgba(129, 199, 132, 0.65)',
   },
   fabText: {
     color: '#fff',
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: 14,
+    fontWeight: '700',
   },
 });

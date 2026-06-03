@@ -14,17 +14,20 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from 'react-native';
 import { createPost } from '../../services/communityService';
+import GlassCard from '../../components/ui/GlassCard';
 
 export default function CreatePostScreen() {
   const router = useRouter();
   const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
   const [description, setDescription] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [selectedCropType, setSelectedCropType] = useState<string>('');
+  const [selectedCropType] = useState<string>('Ngô'); // Default to Corn
   const [loading, setLoading] = useState(false);
+  const [isTitleFocused, setIsTitleFocused] = useState(false);
+  const [isDescFocused, setIsDescFocused] = useState(false);
 
   const MAX_TITLE_LENGTH = 200;
   const MAX_DESCRIPTION_LENGTH = 2500;
@@ -33,7 +36,7 @@ export default function CreatePostScreen() {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Quyền truy cập', 'Cần quyền truy cập thư viện ảnh');
+        Alert.alert('Quyền truy cập', 'Cần quyền truy cập thư viện ảnh để thêm hình ảnh.');
         return;
       }
 
@@ -57,13 +60,9 @@ export default function CreatePostScreen() {
     setSelectedImage(null);
   };
 
-  const handleSelectCropType = () => {
-    Alert.alert('Chọn cây trồng', 'Tính năng đang phát triển');
-  };
-
   const handleSubmit = async () => {
-    if (!title.trim() && !content.trim() && !description.trim()) {
-      Alert.alert('Lỗi', 'Vui lòng nhập câu hỏi hoặc mô tả');
+    if (!title.trim() && !description.trim()) {
+      Alert.alert('Lỗi', 'Vui lòng nhập câu hỏi hoặc mô tả chi tiết');
       return;
     }
 
@@ -71,7 +70,7 @@ export default function CreatePostScreen() {
       setLoading(true);
       const postData = {
         title: title.trim() || undefined,
-        content: content.trim() || description.trim(),
+        content: description.trim() || title.trim(),
         description: description.trim() || undefined,
         imageUrl: selectedImage || undefined,
         cropType: selectedCropType || undefined,
@@ -81,7 +80,7 @@ export default function CreatePostScreen() {
       const newPost = await createPost(postData);
 
       if (newPost) {
-        Alert.alert('Thành công', 'Bài đăng đã được tạo', [
+        Alert.alert('Thành công', 'Câu hỏi của bạn đã được đăng lên cộng đồng!', [
           {
             text: 'OK',
             onPress: () => {
@@ -104,16 +103,17 @@ export default function CreatePostScreen() {
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
       <StatusBar style="light" />
 
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
-          style={styles.backButton}
+          style={styles.backButtonHeader}
           onPress={() => router.back()}
         >
-          <Ionicons name="arrow-back" size={24} color="#FFF" />
+          <Ionicons name="arrow-back" size={22} color="#FFF" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Hỏi Cộng đồng</Text>
         <View style={styles.placeholder} />
@@ -124,87 +124,104 @@ export default function CreatePostScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={handlePickImage}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="image-outline" size={24} color="#E0E0E0" />
-          <Text style={styles.addButtonText}>Thêm hình ảnh</Text>
-        </TouchableOpacity>
-        <Text style={styles.hintText}>
-          Cải thiện xác suất nhận được câu trả lời đúng
-        </Text>
-
-        {selectedImage && (
+        {/* Hình ảnh */}
+        {selectedImage ? (
           <View style={styles.imagePreviewContainer}>
             <Image source={{ uri: selectedImage }} style={styles.imagePreview} />
             <TouchableOpacity
               style={styles.removeImageButton}
               onPress={handleRemoveImage}
+              activeOpacity={0.8}
             >
-              <Ionicons name="close-circle" size={24} color="#fff" />
+              <Ionicons name="close" size={18} color="#fff" />
             </TouchableOpacity>
           </View>
+        ) : (
+          <TouchableOpacity
+            style={styles.imageUploadCard}
+            onPress={handlePickImage}
+            activeOpacity={0.7}
+          >
+            <GlassCard style={styles.imageUploadInner} intensity={20}>
+              <Ionicons name="camera" size={32} color="#81C784" />
+              <Text style={styles.uploadText}>Thêm hình ảnh cây ngô bị bệnh</Text>
+              <Text style={styles.uploadSubtext}>Giúp chẩn đoán chính xác hơn</Text>
+            </GlassCard>
+          </TouchableOpacity>
         )}
 
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={handleSelectCropType}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.addButtonText}>Thêm cây trồng</Text>
-        </TouchableOpacity>
+        {/* Cây trồng mặc định */}
+        <View style={styles.cropSelectSection}>
+          <Text style={styles.sectionLabel}>Cây trồng liên quan:</Text>
+          <GlassCard style={styles.cropChip} intensity={30}>
+            <Ionicons name="leaf" size={14} color="#81C784" />
+            <Text style={styles.cropChipText}>{selectedCropType}</Text>
+          </GlassCard>
+        </View>
 
+        {/* Tiêu đề câu hỏi */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>
-            Câu hỏi của bạn cho cộng đồng
+            Tiêu đề câu hỏi
           </Text>
           <TextInput
-            style={styles.textArea}
-            placeholder="Thêm một câu hỏi cho biết vấn đề với cây trồng của bạn"
-            placeholderTextColor="rgba(255, 255, 255, 0.5)"
+            style={[
+              styles.input,
+              isTitleFocused && styles.inputFocused
+            ]}
+            placeholder="Ví dụ: Lá ngô có những đốm màu nâu xám là bệnh gì?"
+            placeholderTextColor="rgba(255, 255, 255, 0.45)"
             value={title}
             onChangeText={setTitle}
-            multiline
+            onFocus={() => setIsTitleFocused(true)}
+            onBlur={() => setIsTitleFocused(false)}
             maxLength={MAX_TITLE_LENGTH}
           />
           <Text style={styles.characterCount}>
-            {title.length} / {MAX_TITLE_LENGTH} số ký tự
+            {title.length} / {MAX_TITLE_LENGTH} ký tự
           </Text>
         </View>
 
+        {/* Mô tả chi tiết */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Mô tả vấn đề của bạn</Text>
+          <Text style={styles.sectionTitle}>Mô tả chi tiết triệu chứng</Text>
           <TextInput
-            style={[styles.textArea, styles.descriptionArea]}
-            placeholder="Mô tả các đặc trưng như thay đổi ở lá, màu rễ, bọ, chỗ rách..."
-            placeholderTextColor="rgba(255, 255, 255, 0.5)"
+            style={[
+              styles.textArea,
+              isDescFocused && styles.inputFocused
+            ]}
+            placeholder="Mô tả cụ thể các đặc trưng như: thay đổi màu sắc ở lá, mặt trên/dưới lá, tốc độ lây lan, sâu hại xuất hiện..."
+            placeholderTextColor="rgba(255, 255, 255, 0.45)"
             value={description}
             onChangeText={setDescription}
+            onFocus={() => setIsDescFocused(true)}
+            onBlur={() => setIsDescFocused(false)}
             multiline
             maxLength={MAX_DESCRIPTION_LENGTH}
           />
           <Text style={styles.characterCount}>
-            {description.length} / {MAX_DESCRIPTION_LENGTH} số ký tự
+            {description.length} / {MAX_DESCRIPTION_LENGTH} ký tự
           </Text>
         </View>
       </ScrollView>
 
+      {/* Footer chứa nút submit */}
       <View style={styles.footer}>
         <TouchableOpacity
           style={[
             styles.submitButton,
-            ((!title.trim() && !description.trim() && !content.trim()) || loading) &&
+            ((!title.trim() && !description.trim()) || loading) &&
             styles.submitButtonDisabled,
           ]}
           onPress={handleSubmit}
-          disabled={((!title.trim() && !description.trim() && !content.trim()) || loading)}
-          activeOpacity={0.7}
+          disabled={((!title.trim() && !description.trim()) || loading)}
+          activeOpacity={0.8}
         >
-          <Text style={styles.submitButtonText}>
-            {loading ? (selectedImage ? 'Đang upload ảnh...' : 'Đang gửi...') : 'Gửi'}
-          </Text>
+          {loading ? (
+            <ActivityIndicator size="small" color="#FFF" />
+          ) : (
+            <Text style={styles.submitButtonText}>Đăng câu hỏi</Text>
+          )}
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -222,12 +239,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingTop: 50,
-    paddingBottom: 16,
+    paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
   },
-  backButton: {
+  backButtonHeader: {
     padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
   },
   headerTitle: {
     fontSize: 18,
@@ -235,105 +254,158 @@ const styles = StyleSheet.create({
     color: '#FFF',
   },
   placeholder: {
-    width: 40,
+    width: 38,
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     padding: 16,
-    paddingBottom: 100,
+    paddingBottom: 40,
   },
-  addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 8,
-    gap: 8,
-  },
-  addButtonText: {
-    fontSize: 15,
-    color: '#FFF',
-  },
-  hintText: {
-    fontSize: 13,
-    color: '#E0E0E0',
+  imageUploadCard: {
     marginBottom: 16,
-    marginLeft: 4,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  imageUploadInner: {
+    paddingVertical: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderStyle: 'dashed',
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+  },
+  uploadText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFF',
+    marginTop: 10,
+  },
+  uploadSubtext: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.45)',
+    marginTop: 4,
   },
   imagePreviewContainer: {
     position: 'relative',
     marginBottom: 16,
-    borderRadius: 8,
+    borderRadius: 16,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
   },
   imagePreview: {
     width: '100%',
-    height: 200,
+    height: 180,
     resizeMode: 'cover',
   },
   removeImageButton: {
     position: 'absolute',
-    top: 8,
-    right: 8,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    top: 10,
+    right: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    borderRadius: 16,
+    width: 28,
+    height: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cropSelectSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    gap: 8,
+  },
+  sectionLabel: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontWeight: '600',
+  },
+  cropChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(129, 199, 132, 0.4)',
+    backgroundColor: 'rgba(129, 199, 132, 0.12)',
+    gap: 4,
+  },
+  cropChipText: {
+    fontSize: 13,
+    color: '#81C784',
+    fontWeight: '700',
   },
   section: {
-    marginBottom: 24,
+    marginBottom: 20,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
     color: '#FFF',
-    marginBottom: 12,
+    marginBottom: 10,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 14,
+    color: '#FFF',
   },
   textArea: {
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 8,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 14,
     padding: 16,
-    fontSize: 15,
+    fontSize: 14,
     color: '#FFF',
-    minHeight: 100,
+    minHeight: 140,
     textAlignVertical: 'top',
   },
-  descriptionArea: {
-    minHeight: 150,
+  inputFocused: {
+    borderColor: 'rgba(129, 199, 132, 0.6)',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
   },
   characterCount: {
-    fontSize: 12,
-    color: '#E0E0E0',
+    fontSize: 11,
+    color: 'rgba(255, 255, 255, 0.4)',
     textAlign: 'right',
-    marginTop: 8,
+    marginTop: 6,
   },
   footer: {
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.1)',
-    backgroundColor: 'transparent',
+    borderTopColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: 'rgba(15, 10, 30, 0.5)',
   },
   submitButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-    borderRadius: 8,
-    paddingVertical: 16,
+    backgroundColor: '#4CAF50',
+    borderRadius: 22,
+    paddingVertical: 14,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.4)',
+    justifyContent: 'center',
+    shadowColor: '#4CAF50',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   submitButtonDisabled: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
     shadowOpacity: 0,
     elevation: 0,
   },
   submitButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: '700',
     color: '#fff',
   },
 });
